@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{Deliverable 1 — Problem Formulation}\\
+Introduction to Machine Learning}
+\author{
+Gonçalo Almeida (119792) \\
+Margarida Ribeiro (119876) \\
+João Barreira (120054)
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\onehalfspacing
+
+\section{Context and Motivation}
+
+With the exponential growth of digital traffic and the increasing sophistication of cyberattacks, the efficient detection of malicious behavior has become a critical challenge for organizations and digital infrastructures. Traditional approaches based on predefined rules and signatures present significant limitations, particularly in detecting new or previously unknown attacks (zero-day attacks).
+
+In this context, Machine Learning techniques, especially anomaly detection methods, emerge as a promising solution. These approaches allow modeling normal network behavior and identifying deviations that may indicate malicious activity, without relying solely on previously labeled attack data.
+
+This project proposes the development of a machine learning system for anomaly detection in network traffic, aiming to automatically identify suspicious patterns that may correspond to cyberattacks.
+
+\section{Dataset Description}
+
+The dataset selected for this project is the \textbf{CIC-IDS2017}, developed by the Canadian Institute for Cybersecurity.
+
+This dataset contains realistic network traffic data, including both benign activity and multiple types of attacks, such as:
+\begin{itemize}
+    \item Distributed Denial of Service (DDoS)
+    \item Brute Force
+    \item Port Scanning
+    \item Web Attacks
+\end{itemize}
+
+It includes a wide range of statistical features extracted from network flows, such as connection duration, number of packets, transmitted bytes, and temporal metrics.
+
+In this project, the dataset will be treated as a static, tabular collection of records, where each instance corresponds to an aggregated network flow described by numerical features, rather than as a real-time traffic stream.
+
+\subsection{Limitations and Potential Bias}
+
+\begin{itemize}
+    \item The dataset was generated in a controlled environment and may not fully represent real-world scenarios
+    \item Certain attack types may be overrepresented
+    \item Possible lack of up-to-date attack patterns
+    \item Dependence on the quality and selection of provided features
+\end{itemize}
+
+\section{Type of Machine Learning Problem}
+
+The problem will be addressed as an \textbf{anomaly detection task}, within an unsupervised or semi-supervised learning framework.
+
+The model will be trained primarily using data representing normal network traffic, learning the typical behavior patterns of the system. Observations that significantly deviate from these learned patterns will be identified as anomalies.
+
+This approach is particularly relevant in cybersecurity, as it enables the detection of previously unseen attacks without requiring labeled examples.
+
+\subsection{Detection Strategy}
+
+The anomaly detection task will be carried out on \textbf{tabular data}. Each observation corresponds to a summarized network flow represented by a fixed set of numerical and categorical features. The learning process will follow an offline/batch setting, where a historical dataset is split into training, validation, and test subsets.
+
+The models considered will be unsupervised or semi-supervised methods that operate directly on this tabular representation (e.g., distance-based, density-based, or isolation-based approaches), rather than streaming or online algorithms. Handling real-time streaming detection (with sliding windows or explicit concept drift mechanisms) is outside the scope of this first deliverable and may be explored later as an extension.
+
+\section{Features and Target Definition}
+
+\subsection{Input Features}
+
+The model will use features extracted from network traffic, including:
+\begin{itemize}
+    \item Connection duration
+    \item Number of transmitted packets
+    \item Volume of data (bytes sent/received)
+    \item Data transfer rate
+    \item Number of connections per time unit
+    \item Network protocols used
+\end{itemize}
+
+These features allow capturing behavioral patterns of network activity and distinguishing between normal and anomalous traffic.
+
+\subsection{Target}
+
+In the context of anomaly detection, there is no explicit target variable during training. The model learns patterns from normal data and identifies deviations as anomalies.
+
+However, the labeled data available in the dataset (benign vs attack) will be used for performance evaluation.
+
+\section{Evaluation Strategy}
+
+The model will be evaluated based on its ability to correctly identify anomalous behavior, using metrics suitable for cybersecurity contexts:
+
+\begin{itemize}
+    \item \textbf{Precision} — proportion of detected anomalies that are actual attacks
+    \item \textbf{Recall} — ability to detect existing attacks
+    \item \textbf{F1-score} — balance between precision and recall
+\end{itemize}
+
+In this context, particular emphasis will be placed on recall, as failing to detect attacks (false negatives) may lead to severe consequences.
+
+\section{Initial Risks and Assumptions}
+
+\subsection{Risks}
+
+\begin{itemize}
+    \item High rate of false positives, classifying normal traffic as anomalous
+    \item Difficulty in detecting attacks that closely resemble normal behavior
+    \item Potential overfitting to dataset-specific patterns
+    \item Sensitivity to feature quality and selection
+\end{itemize}
+
+\subsection{Assumptions}
+
+\begin{itemize}
+    \item The normal traffic in the dataset represents realistic behavior
+    \item The available features are sufficient to distinguish normal and anomalous patterns
+    \item The model will generalize to unseen data
+\end{itemize}
+
+\section{Final Considerations}
+
+This project aims to explore the potential of anomaly detection techniques in cybersecurity, contributing to the development of more adaptive and robust systems for threat detection.
+
+The proposed approach not only addresses the defined problem but also promotes critical reflection on the challenges associated with real-world attack detection, including data limitations, operational risks, and ethical implications.
+
+\end{document}
