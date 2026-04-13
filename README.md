@@ -43,5 +43,24 @@ Pronto! Verificam que foi gerada uma pasta oculta do *git* chamada **`processed_
 
 **Margarida/Gonçalo:** Nas vossas experiências e Notebooks relativos às models, só precisam de começar os vossos códigos fazendo `pd.read_csv('processed_data/X_train.csv')`. Todos estaremos a operar exatamente na mesma partição da base de dados e com as mesmas variáveis normalizadas e com colunas idênticas.
 
-Bom trabalho de modelação! 🚀
-*(João Barreira)*
+### 5. Rodar os Modelos de Modelação (Gonçalo)
+Para treinar e avaliar os modelos de deteção de anomalias, utilize o script `src/modeling.py`. Como alguns modelos podem ser demorados, é possível executá-los separadamente:
+
+```bash
+# Isolation Forest (Rápido)
+python3 src/modeling.py --model if
+
+# One-Class SVM (Demorado, usa amostragem de 10% do treino)
+python3 src/modeling.py --model ocsvm
+
+# Local Outlier Factor (Novelty Detection)
+python3 src/modeling.py --model lof
+
+# Autoencoder (PyTorch)
+python3 src/modeling.py --model ae
+
+# Rodar todos sequencialmente
+python3 src/modeling.py --model all
+```
+
+Os resultados (métricas e matrizes de confusão) serão guardados na pasta `models/`.
