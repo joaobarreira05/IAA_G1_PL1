@@ -143,7 +143,7 @@ def train_autoencoder(X_train, X_test, y_train):
     train_data = torch.FloatTensor(X_train_normal)
     train_loader = DataLoader(TensorDataset(train_data), batch_size=64, shuffle=True)
     
-    num_epochs = 10
+    num_epochs = 30
     model.train()
     for epoch in range(num_epochs):
         epoch_loss = 0
@@ -171,10 +171,56 @@ def train_autoencoder(X_train, X_test, y_train):
     
     return y_pred, mse
 
+def train_autoencoder_bad(X_train, X_test, y_train):
+    print("\nTraining Second Autoencoder (trained on Anomalous data)...")
+    # For this AE, we train ONLY on Anomalous (bad) data
+    X_train_bad = X_train[y_train == 1].values
+    
+    input_dim = X_train_bad.shape[1]
+    model = Autoencoder(input_dim)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    
+    train_data = torch.FloatTensor(X_train_bad)
+    train_loader = DataLoader(TensorDataset(train_data), batch_size=64, shuffle=True)
+    
+    num_epochs = 10
+    model.train()
+    for epoch in range(num_epochs):
+        epoch_loss = 0
+        for data in train_loader:
+            optimizer.zero_grad()
+            output = model(data[0])
+            loss = criterion(output, data[0])
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+        if (epoch+1) % 2 == 0:
+            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss/len(train_loader):.6f}")
+            
+    # Evaluation
+    model.eval()
+    with torch.no_grad():
+        test_data = torch.FloatTensor(X_test.values)
+        test_output = model(test_data)
+        # Reconstruction error as anomaly score
+        mse = nn.functional.mse_loss(test_output, test_data, reduction='none').mean(dim=1).numpy()
+    
+    # Threshold selection: Since it's trained on Anomalies, LOW error means Anomaly.
+    # We want to flag samples that look like the 'bad' data.
+    # If we assume ~20% of data is anomalous, we take the 20% with LOWEST error.
+    threshold = np.percentile(mse, 20) 
+    y_pred = (mse < threshold).astype(int)
+    
+    # For AUC calculation, y_scores should be higher for anomalies.
+    # Since low MSE = anomaly here, we can use 1/MSE or -MSE.
+    # We use -mse so that lower mse (anomaly) results in a higher score.
+    return y_pred, -mse
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Anomaly Detection Models")
-    parser.add_argument("--model", type=str, choices=["if", "ocsvm", "lof", "ae", "all"], default="all",
-                        help="Model to run: if (Isolation Forest), ocsvm (One-Class SVM), lof (LOF), ae (Autoencoder), or all")
+    parser.add_argument("--model", type=str, choices=["if", "ocsvm", "lof", "ae", "ae2", "all"], default="all",
+                        help="Model to run: if (Isolation Forest), ocsvm (One-Class SVM), lof (LOF), ae (Autoencoder), ae2 (Ensemble Primary+Secondary AE), or all")
     args = parser.parse_args()
 
     X_train, X_val, X_test, y_train, y_val, y_test = load_data()
@@ -196,10 +242,30 @@ if __name__ == "__main__":
         y_pred_lof, y_scores_lof = train_lof(X_train, X_test)
         results.append(evaluate_model("Local Outlier Factor", y_test, y_pred_lof, y_scores_lof))
     
-    if args.model in ["ae", "all"]:
-        # 4. Autoencoder
+    # Autoencoders section (ae and ae2 can be dependent)
+    y_pred_ae, y_scores_ae = None, None
+    y_pred_ae2, y_scores_ae2 = None, None
+    
+    if args.model in ["ae", "ae2", "all"]:
+        # 4. Primary Autoencoder
         y_pred_ae, y_scores_ae = train_autoencoder(X_train, X_test, y_train)
         results.append(evaluate_model("Autoencoder", y_test, y_pred_ae, y_scores_ae))
+    
+    if args.model in ["ae2", "all"]:
+        # 5. Second Autoencoder (Bad Traffic)
+        y_pred_ae2, y_scores_ae2 = train_autoencoder_bad(X_train, X_test, y_train)
+        results.append(evaluate_model("Second Autoencoder", y_test, y_pred_ae2, y_scores_ae2))
+        
+        # 6. Ensemble (Primary + Second)
+        print("\nCreating Ensemble Autoencoder (In conjunction)...")
+        # Logical OR for predictions to reduce False Negatives
+        y_pred_ensemble = (y_pred_ae | y_pred_ae2).astype(int)
+        
+        # Combined score for AUC: Sum of normalized scores (simple sum since they are same scale)
+        # Note: y_scores_ae2 is already -mse, which is higher for anomalies
+        y_scores_ensemble = y_scores_ae + y_scores_ae2
+        
+        results.append(evaluate_model("Ensemble Autoencoder", y_test, y_pred_ensemble, y_scores_ensemble))
     
     # Summary Table
     if results:
