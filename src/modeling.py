@@ -145,6 +145,7 @@ def train_autoencoder(X_train, X_test, y_train):
     
     num_epochs = 30
     model.train()
+    loss_history = []
     for epoch in range(num_epochs):
         epoch_loss = 0
         for data in train_loader:
@@ -154,8 +155,41 @@ def train_autoencoder(X_train, X_test, y_train):
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
+        avg_loss = epoch_loss / len(train_loader)
+        loss_history.append(avg_loss)
         if (epoch+1) % 2 == 0:
-            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss/len(train_loader):.6f}")
+            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
+    
+    # Plot loss history
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_epochs+1), loss_history, marker='o', linewidth=2, markersize=4, color='#2E86AB')
+    plt.xlabel('Epoch', fontsize=12, fontweight='bold')
+    plt.ylabel('Loss (MSE)', fontsize=12, fontweight='bold')
+    plt.title('Autoencoder Training Loss over Epochs', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(MODELS_DIR, "autoencoder_loss_history.png"), dpi=300)
+    plt.close()
+    print(f"✓ Loss history plot saved")
+    
+    # Save loss data for analysis
+    loss_df = pd.DataFrame({'Epoch': range(1, num_epochs+1), 'Loss': loss_history})
+    loss_df.to_csv(os.path.join(MODELS_DIR, "autoencoder_loss_history.csv"), index=False)
+    
+    # Find optimal epoch (elbow point or minimum loss region)
+    min_loss_epoch = np.argmin(loss_history) + 1
+    print(f"Minimum loss at Epoch: {min_loss_epoch} (Loss: {loss_history[min_loss_epoch-1]:.6f})")
+    
+    # Detect elbow (where improvement slows down significantly)
+    loss_diff = np.diff(loss_history)
+    loss_diff_pct = (loss_diff / loss_history[:-1]) * 100
+    elbow_threshold = -0.5  # 0.5% improvement threshold
+    elbow_epoch = min_loss_epoch
+    for i in range(min_loss_epoch, len(loss_diff_pct)):
+        if abs(loss_diff_pct[i]) < abs(elbow_threshold):
+            elbow_epoch = i + 1
+            break
+    print(f"Suggested optimal epochs: ~{elbow_epoch} (elbow point)")
             
     # Evaluation
     model.eval()
@@ -169,7 +203,7 @@ def train_autoencoder(X_train, X_test, y_train):
     threshold = np.percentile(mse, 80) # Adjust based on expected contamination
     y_pred = (mse > threshold).astype(int)
     
-    return y_pred, mse
+    return y_pred, mse, loss_history
 
 def train_autoencoder_bad(X_train, X_test, y_train):
     print("\nTraining Second Autoencoder (trained on Anomalous data)...")
@@ -186,6 +220,7 @@ def train_autoencoder_bad(X_train, X_test, y_train):
     
     num_epochs = 10
     model.train()
+    loss_history = []
     for epoch in range(num_epochs):
         epoch_loss = 0
         for data in train_loader:
@@ -195,8 +230,26 @@ def train_autoencoder_bad(X_train, X_test, y_train):
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
+        avg_loss = epoch_loss / len(train_loader)
+        loss_history.append(avg_loss)
         if (epoch+1) % 2 == 0:
-            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss/len(train_loader):.6f}")
+            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
+    
+    # Plot loss history
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, num_epochs+1), loss_history, marker='s', linewidth=2, markersize=5, color='#A23B72')
+    plt.xlabel('Epoch', fontsize=12, fontweight='bold')
+    plt.ylabel('Loss (MSE)', fontsize=12, fontweight='bold')
+    plt.title('Second Autoencoder (Bad Traffic) Training Loss over Epochs', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(MODELS_DIR, "autoencoder_bad_loss_history.png"), dpi=300)
+    plt.close()
+    print(f"✓ Loss history plot saved")
+    
+    # Save loss data for analysis
+    loss_df = pd.DataFrame({'Epoch': range(1, num_epochs+1), 'Loss': loss_history})
+    loss_df.to_csv(os.path.join(MODELS_DIR, "autoencoder_bad_loss_history.csv"), index=False)
             
     # Evaluation
     model.eval()
@@ -215,7 +268,7 @@ def train_autoencoder_bad(X_train, X_test, y_train):
     # For AUC calculation, y_scores should be higher for anomalies.
     # Since low MSE = anomaly here, we can use 1/MSE or -MSE.
     # We use -mse so that lower mse (anomaly) results in a higher score.
-    return y_pred, -mse
+    return y_pred, -mse, loss_history
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Anomaly Detection Models")
