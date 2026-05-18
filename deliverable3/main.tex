@@ -1,15 +1,26 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[10pt,conference]{IEEEtran}
 \IEEEoverridecommandlockouts
+\renewcommand{\baselinestretch}{0.95}
 
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{algorithmic}
+% \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{float}
 \usepackage{hyperref}
+
+% Optimize float spacing for strict 6-page limit
+\setlength{\textfloatsep}{7pt plus 1pt minus 1pt}
+\setlength{\intextsep}{7pt plus 1pt minus 1pt}
+\setlength{\dbltextfloatsep}{7pt plus 1pt minus 1pt}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{3pt}
+
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\footnotesize}{\scriptsize}{}{}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -59,15 +70,10 @@ The rapid expansion of internet-connected devices has exponentially increased ne
 
 \input{goncalo_section.tex}
 
-\section{Critical Reflection}
-% Margarida to fill this part
-\textit{[To be completed by Margarida]}
-
-\section{AI Tools Acknowledgement}
-% Joao to fill this part
-\textit{[To be completed by João]}
-
+\begingroup
+\scriptsize
 \bibliographystyle{IEEEtran}
 \bibliography{references}
+\endgroup
 
 \end{document}

@@ -10,10 +10,10 @@ Initial exploratory data analysis (EDA) identified several data quality issues i
 
 Statistical profiling of the continuous variables revealed stark differences in magnitudes. For instance, the \texttt{Flow Duration} feature spans from a few microseconds to over 119 seconds, whereas \texttt{Packet Length} values are constrained to standard MTU limits (typically under 1500 bytes). This discrepancy necessitates robust scaling techniques.
 
-\begin{figure}[H]
+\begin{figure}[ht]
     \centering
-    \includegraphics[width=0.48\textwidth]{images/dataset_split.png}
-    \includegraphics[width=0.48\textwidth]{images/class_distribution.png}
+    \includegraphics[width=0.48\columnwidth]{images/dataset_split.png}
+    \includegraphics[width=0.48\columnwidth]{images/class_distribution.png}
     \caption{Dataset split proportions and class distribution across subsets.}
     \label{fig:data_dist}
 \end{figure}
