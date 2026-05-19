@@ -1,0 +1,11 @@
+\section{Data Preprocessing}
+
+To construct the final input for the machine learning algorithms, an automated data processing pipeline was developed, consisting of the following sequential steps:
+
+\begin{enumerate}
+    \item \textbf{Data Cleaning:} We identified the presence of invalid structural values, including whitespace in column headers, and critical numerical anomalies. Specifically, `Infinity` values (arising from division by zero in bandwidth calculations like \texttt{Flow Bytes/s}) and `NaN` values were eliminated. As these affected less than 0.1\% of the dataset, direct removal (\textit{dropna}) was preferred over imputation to prevent the introduction of synthetic bias into the network behaviour distribution.
+    \item \textbf{Dimensionality Reduction (Zero-Variance Check):} To mitigate computational noise, features demonstrating zero variance across the network captures were pruned. Eight features (e.g., \texttt{Bwd PSH Flags}, \texttt{Fwd Avg Bytes/Bulk}) were removed as they provide no discriminative power for distance-based detection mechanisms.
+    \item \textbf{Stratified Sampling:} Given the massive size of the dataset ($>$1GB), loading the entire corpus triggered Out-Of-Memory (OOM) failures for algorithms with quadratic complexity ($\mathcal{O}(n^2)$). A 20\% stratified sampling was implemented, preserving the native 80/20 class imbalance while rendering the dataset computationally tractable ($\approx 565,000$ instances).
+    \item \textbf{Data Split and Scaling:} The sample was split into 70\% Training, 15\% Validation, and 15\% Testing partitions. To ensure proper convergence of distance-based models and neural networks, attributes were scaled using \textit{StandardScaler}. To rigorously prevent data leakage, the scaler was fitted exclusively on the Training set and subsequently used to transform the Validation and Test sets.
+\end{enumerate}
+

@@ -1,0 +1,45 @@
+\section{State of the Art in Anomaly-Based Intrusion Detection}
+% ─────────────────────────────────────────────────────────────
+
+Network intrusion detection has evolved considerably over the past two decades, transitioning from purely signature-based systems to sophisticated machine-learning (ML) pipelines that can generalise to previously unseen attack patterns. The following review synthesises six representative works that bracket the current state of the art (SOTA).
+
+\subsection{Classical Unsupervised Approaches}
+
+\textbf{Isolation Forest (Liu et al., 2008)} \cite{liu2008isolation} introduced the first tree-ensemble method designed natively for anomaly detection rather than adapted from a classification framework. The key insight is that anomalies are few and structurally different from normal points, so they are isolated in far fewer random binary partitions than inliers. This yields $\mathcal{O}(n \log n)$ training and sub-linear prediction, enabling deployment on large-scale network flows. Liu et al.\ report AUC values above 0.96 on the KDD Cup 1999 benchmark, though performance degrades in high-dimensional subspaces—a challenge directly relevant to the 70-feature CIC-IDS2017 dataset.
+
+\textbf{Local Outlier Factor (Breunig et al., 2000)} \cite{breunig2000lof} defines an anomaly score based on the ratio of local reachability densities between a point and its $k$-nearest neighbours. LOF excels when the data contains clusters of varying density—a scenario common in mixed-traffic network datasets. However, its $\mathcal{O}(n^2)$ inference complexity and well-documented sensitivity to the curse of dimensionality \cite{zimek2012survey} make it poorly suited to the high-dimensional feature spaces of modern IDS datasets. Zimek et al.\ \cite{zimek2012survey} provide a comprehensive survey confirming that density-based methods consistently underperform tree and kernel methods beyond 20–30 features.
+
+\textbf{One-Class SVM (Schölkopf et al., 2001)} \cite{scholkopf2001ocsvm} maps training data into a high-dimensional kernel space and finds the maximum-margin hyperplane separating inliers from the origin. The \textit{nu} parameter controls the trade-off between the fraction of outliers allowed in training and the fraction of support vectors. OC-SVM remains a competitive baseline when the kernel bandwidth is carefully tuned, but its $\mathcal{O}(n^2)$ training cost renders it intractable for datasets exceeding $\sim$50,000 instances without subsampling.
+
+\subsection{Deep Learning Approaches}
+
+\textbf{Autoencoder-based Anomaly Detection (Sakurada \& Yairi, 2014)} \cite{sakurada2014autoencoder} established the reconstruction-error paradigm: a neural network trained exclusively on normal data learns a compact latent representation; anomalous inputs, being structurally different, produce high mean-squared reconstruction error (MSE) and are flagged as outliers. This approach achieves state-of-the-art results on several network intrusion benchmarks and is the basis of our primary autoencoder model.
+
+\textbf{Deep Autoencoder IDS (Mirsky et al., 2018 — Kitsune)} \cite{mirsky2018kitsune} extended the autoencoder concept by constructing an ensemble of small autoencoders—one per feature cluster—trained incrementally on packet captures. Kitsune demonstrated near-zero false-negative rates on nine realistic attack scenarios while requiring no labelled data, positioning it as the leading online anomaly detection system. Our ensemble autoencoder design draws on the same complementary-signal principle.
+
+\textbf{DAGMM (Zong et al., 2018)} \cite{zong2018dagmm} jointly trains a deep autoencoder and a Gaussian Mixture Model (GMM) in an end-to-end fashion, using both reconstruction error and energy from the GMM as the anomaly score. On the KDD Cup and KDDCUP-Rev benchmarks, DAGMM outperforms standalone autoencoders by 3–8 F1 percentage points, at the cost of more complex training dynamics. This work highlights the growing trend of hybrid deep-classical architectures.
+
+\subsection{Summary and Research Gap}
+
+Table~\ref{tab:sota} summarises the reviewed works. The literature converges on several consensus findings: (i) tree-ensemble and deep-learning methods dominate density-based approaches in high-dimensional settings; (ii) the contamination hyperparameter critically affects all unsupervised methods; (iii) systematic hyperparameter optimisation is rarely reported in classical IDS papers despite its demonstrated impact on downstream metrics. Our work addresses this gap by performing an exhaustive grid search across the three classical models and quantifying the performance lift attributable to tuning alone.
+
+\begin{table}[ht]
+  \centering
+  \caption{Summary of SOTA anomaly detection methods.}
+  \label{tab:sota}
+  \footnotesize
+  \begin{tabular}{lllr}
+    \toprule
+    \textbf{Method}      & \textbf{Type}       & \textbf{Dataset}    & \textbf{AUC} \\
+    \midrule
+    Isolation Forest \cite{liu2008isolation}    & Tree ensemble & KDD'99        & 0.96 \\
+    LOF \cite{breunig2000lof}                   & Density       & Synthetic     & 0.89 \\
+    One-Class SVM \cite{scholkopf2001ocsvm}     & Kernel        & USPS          & 0.87 \\
+    Autoencoder \cite{sakurada2014autoencoder}  & Deep learning & MSDS          & 0.93 \\
+    Kitsune \cite{mirsky2018kitsune}            & Ensemble AE   & Real traffic  & 0.99 \\
+    DAGMM \cite{zong2018dagmm}                  & Deep hybrid   & KDD'99        & 0.98 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────

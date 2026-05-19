@@ -1,6 +1,6 @@
 \documentclass[10pt,conference]{IEEEtran}
 \IEEEoverridecommandlockouts
-\renewcommand{\baselinestretch}{0.95}
+\renewcommand{\baselinestretch}{0.92}
 
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -13,11 +13,11 @@
 \usepackage{hyperref}
 
 % Optimize float spacing for strict 6-page limit
-\setlength{\textfloatsep}{7pt plus 1pt minus 1pt}
-\setlength{\intextsep}{7pt plus 1pt minus 1pt}
-\setlength{\dbltextfloatsep}{7pt plus 1pt minus 1pt}
-\setlength{\abovecaptionskip}{3pt}
-\setlength{\belowcaptionskip}{3pt}
+\setlength{\textfloatsep}{5pt plus 1pt minus 1pt}
+\setlength{\intextsep}{5pt plus 1pt minus 1pt}
+\setlength{\dbltextfloatsep}{5pt plus 1pt minus 1pt}
+\setlength{\abovecaptionskip}{2pt}
+\setlength{\belowcaptionskip}{2pt}
 
 \usepackage{etoolbox}
 \patchcmd{\thebibliography}{\footnotesize}{\scriptsize}{}{}
@@ -64,11 +64,23 @@ Anomaly Detection, Machine Learning, Cybersecurity, Autoencoders, Isolation Fore
 \section{Introduction}
 The rapid expansion of internet-connected devices has exponentially increased network traffic...
 
-\input{joao_section.tex}
+\input{sections/state_of_art.tex}
 
-\input{margarida_section.tex}
+\input{sections/data_description.tex}
 
-\input{goncalo_section.tex}
+\input{sections/data_preprocessing.tex}
+
+\input{sections/classical_algorithms.tex}
+
+\input{sections/deep_learning.tex}
+
+\input{sections/results_discussion.tex}
+
+\input{sections/conclusions.tex}
+
+\input{sections/critical_reflection.tex}
+
+\input{sections/ai_tools.tex}
 
 \begingroup
 \scriptsize
