@@ -41,7 +41,7 @@ To maximize detection rates and minimize false negatives (critical in security c
 For continuous ROC analysis, the combined score is defined as the sum of the normalized scores: $s_{\text{ensemble}}(\mathbf{x}) = s_{\text{primary}}(\mathbf{x}) + s_{\text{secondary}}(\mathbf{x})$.
 
 \subsection{Training Convergence and Analysis}
-The training of both autoencoders was performed using the Adam optimizer (learning rate = $0.001$, batch size = $64$). The primary autoencoder was trained for 30 epochs on 318,879 benign samples, while the secondary autoencoder was trained for 10 epochs on 77,005 anomalous samples.
+The training of both autoencoders was performed using the Adam optimizer (learning rate = $0.001$, batch size = $64$) with early stopping monitored on the validation set reconstruction loss (patience of 5 epochs). The primary autoencoder was trained on 318,879 benign samples and converged at epoch 25, while the secondary autoencoder was trained on 77,005 anomalous samples and converged at epoch 40.
 
 \begin{figure}[ht]
     \centering
@@ -50,7 +50,7 @@ The training of both autoencoders was performed using the Adam optimizer (learni
     \label{fig:loss_comparison}
 \end{figure}
 
-As shown in Figure~\ref{fig:loss_comparison}, the primary autoencoder converged smoothly, reaching its minimum MSE loss at Epoch 29 ($0.0615$). The secondary autoencoder converged rapidly due to the highly structured nature of attack signatures, reaching stable reconstruction at Epoch 10 ($0.0817$). No overfitting was observed on validation data.
+As shown in Figure~\ref{fig:loss_comparison}, both models converged smoothly. The validation loss tracks the training loss without divergence, confirming that early stopping successfully prevented overfitting while avoiding unnecessary training epochs. No overfitting was observed on validation data.
 
 % =============================================================
 \section{Presentation and Discussion of Results}
@@ -68,12 +68,12 @@ All six models were evaluated on the independent held-out Test set containing 84
     & \multicolumn{5}{c|}{\textbf{Original Distribution (Realistic)}} & \multicolumn{5}{c}{\textbf{Balanced Subset (50-50)}} \\
     \textbf{Model} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Bal. Acc} & \textbf{AUC} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Bal. Acc} & \textbf{AUC} \\
     \midrule
-    Isolation Forest & 0.4522 & 0.4625 & 0.4573 & 0.6626 & 0.6994 & 0.7770 & 0.4625 & 0.5798 & 0.6649 & 0.7018 \\
-    One-Class SVM    & 0.3844 & 0.3943 & 0.3893 & 0.6198 & 0.6122 & 0.7159 & 0.3943 & 0.5085 & 0.6189 & 0.6115 \\
-    Local Outlier Factor & 0.1327 & 0.1372 & 0.1349 & 0.4587 & 0.4422 & 0.3902 & 0.1372 & 0.2030 & 0.4614 & 0.4454 \\
-    Autoencoder      & 0.5545 & 0.5635 & 0.5589 & 0.7263 & 0.8724 & 0.8366 & 0.5635 & 0.6734 & 0.7267 & 0.8719 \\
-    Second Autoencoder & \textbf{0.7781} & 0.7907 & \textbf{0.7844} & 0.8677 & 0.9376 & \textbf{0.9375} & 0.7907 & 0.8579 & 0.8690 & 0.9391 \\
-    Ensemble Autoencoder & 0.5855 & \textbf{0.9530} & 0.7253 & \textbf{0.8938} & \textbf{0.9810} & 0.8505 & \textbf{0.9530} & \textbf{0.8989} & \textbf{0.8928} & \textbf{0.9809} \\
+    Isolation Forest & 0.4351 & 0.4453 & 0.4402 & 0.6518 & 0.6901 & 0.7639 & 0.4453 & 0.5627 & 0.6539 & 0.6956 \\
+    One-Class SVM    & 0.3792 & 0.3859 & 0.3825 & 0.6156 & 0.6092 & 0.7202 & 0.3859 & 0.5026 & 0.6180 & 0.6118 \\
+    Local Outlier Factor & 0.4417 & 0.6678 & 0.5317 & 0.7305 & 0.7572 & 0.7680 & 0.6678 & 0.7144 & 0.7330 & 0.7601 \\
+    Autoencoder      & 0.5308 & 0.5476 & 0.5391 & 0.7145 & 0.8507 & 0.8234 & 0.5476 & 0.6578 & 0.7151 & 0.8530 \\
+    Second Autoencoder & \textbf{0.7615} & 0.7812 & \textbf{0.7712} & 0.8606 & 0.9447 & \textbf{0.9265} & 0.7812 & 0.8477 & 0.8596 & 0.9436 \\
+    Ensemble Autoencoder & 0.5722 & \textbf{0.9710} & 0.7200 & \textbf{0.8966} & \textbf{0.9473} & 0.8448 & \textbf{0.9710} & \textbf{0.9035} & \textbf{0.8963} & \textbf{0.9470} \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -83,27 +83,27 @@ Table~\ref{tab:final_results} presents the comparative performance across all te
 
 \begin{enumerate}
   \item \textbf{Deep Learning Dominance:} The top three models are all based on PyTorch Autoencoders. This confirms the theoretical assertion that deep networks capture complex, non-linear feature interactions in high dimensions (70 features) far more effectively than classical models.
-  \item \textbf{Curse of Dimensionality in LOF:} Local Outlier Factor (LOF) fails entirely, achieving an AUC of $0.4422$ (worse than a random guess) and a recall of $13.72\%$. This validates Breunig's \cite{breunig2000lof} and Zimek's \cite{zimek2012survey} warnings: in high-dimensional spaces, distances concentrate, and density ratios lose their discriminative meaning.
-  \item \textbf{Failure of Classical Baselines:} Isolation Forest (AUC = $0.6994$, F1 = $0.4573$) and One-Class SVM (AUC = $0.6122$, F1 = $0.3893$) provide poor performance. Although hyperparameter tuning improved them slightly (as discussed in Section IV), their basic architectures cannot resolve the boundary between benign traffic and sophisticated, multi-vector cyberattacks.
+  \item \textbf{Local Outlier Factor Corrected:} In our initial experiments, Local Outlier Factor (LOF) failed entirely (AUC = 0.4422) due to an incorrect fitting protocol that contaminated training with anomalous traffic and score cancellation. When properly trained strictly on clean normal data (as required for novelty detection) and subsampled for computational feasibility, LOF achieves a respectable AUC of $0.7572$ and F1-Score of $0.5317$. While it still underperforms the deep Autoencoders, this demonstrates that density-based novelty detection is viable when implementation details match algorithmic assumptions.
+  \item \textbf{Failure of Classical Baselines:} Isolation Forest (AUC = $0.6901$, F1 = $0.4402$) and One-Class SVM (AUC = $0.6092$, F1 = $0.3825$) provide poor performance. Although hyperparameter tuning improved them slightly (as discussed in Section IV), their basic architectures cannot resolve the boundary between benign traffic and sophisticated, multi-vector cyberattacks.
 \end{enumerate}
 
 \subsection{Ensemble Autoencoder: The Security Champion}
-The **Ensemble Autoencoder** is the best performing model overall, achieving a near-perfect AUC-ROC of **$0.9810$** and a Recall of **$95.30\%$** under both original and balanced scenarios. In a real-world Security Operations Center (SOC), a recall of 95.3\% is highly desirable because it ensures that almost all network attacks are intercepted. 
+The \textbf{Ensemble Autoencoder} is the best performing model overall, achieving a strong AUC-ROC of \textbf{$0.9473$} and an exceptional Recall of \textbf{$97.10\%$} under both original and balanced scenarios. In a real-world Security Operations Center (SOC), a recall of 97.10\% is highly desirable because it ensures that almost all network attacks are intercepted. 
 
-The main drawback is a moderate precision of **$58.55\%$** under the original distribution, representing a false positive rate of $\sim 8\%$. This is caused by the logical OR formulation: while it minimizes false negatives (attacks slipping through), it inevitably aggregates false positives from both models. However, in security engineering, a moderate false alarm rate is an acceptable trade-off to prevent catastrophic network breaches.
+The main drawback is a moderate precision of \textbf{$57.22\%$} under the original distribution, representing a false positive rate of $\sim 17.8\%$. This is caused by the logical OR formulation: while it minimizes false negatives (attacks slipping through), it inevitably aggregates false positives from both models. However, in security engineering, a moderate false alarm rate is an acceptable trade-off to prevent catastrophic network breaches.
 
 \subsection{Second Autoencoder: The Operational Alternative}
-The **Second Autoencoder** (trained on anomalous traffic) behaves as the most balanced standalone model. Under the original distribution, it achieves the highest F1-Score (**$0.7844$**) and the highest Precision (**$0.7781$**). It correctly identifies $79.07\%$ of anomalies while generating very few false alarms (Precision of $93.75\%$ on the balanced subset). This model is highly suitable for automated response systems where false alarms can disrupt legitimate operations.
+The \textbf{Second Autoencoder} (trained on anomalous traffic) behaves as the most balanced standalone model. Under the original distribution, it achieves the highest F1-Score (\textbf{$0.7712$}) and the highest Precision (\textbf{$0.7615$}). It correctly identifies $78.12\%$ of anomalies while generating very few false alarms (Precision of $92.65\%$ on the balanced subset). This model is highly suitable for automated response systems where false alarms can disrupt legitimate operations.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.46\columnwidth]{images/ensemble_autoencoder_cm.png}
     \includegraphics[width=0.46\columnwidth]{images/ensemble_autoencoder_roc.png}
-    \caption{Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.981).}
+    \caption{Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.947).}
     \label{fig:ensemble_diagnostic}
 \end{figure}
 
-The diagnostic outputs for the Ensemble Autoencoder (Figure~\ref{fig:ensemble_diagnostic}) verify its robustness: the ROC curve displays an extremely steep climb, and the confusion matrix shows that out of 16,697 actual anomalies, only 785 are missed (false negatives).
+The diagnostic outputs for the Ensemble Autoencoder (Figure~\ref{fig:ensemble_diagnostic}) verify its robustness: the ROC curve displays a steep climb, and the confusion matrix shows that out of 16,697 actual anomalies, only 484 are missed (false negatives).
 
 % =============================================================
 \section{Conclusions and Future Work}
@@ -115,8 +115,8 @@ The main conclusions of our investigation are:
 \begin{itemize}
   \item Classical unsupervised anomaly detection methods (LOF, OC-SVM, Isolation Forest) struggle severely in 70-dimensional spaces, validating the curse of dimensionality.
   \item PyTorch-based Deep Autoencoders overcome this bottleneck by mapping features into low-dimensional latent spaces, learning robust non-linear boundaries.
-  \item The proposed **Ensemble Autoencoder** achieves state-of-the-art anomaly discrimination (AUC = $0.9810$) and successfully catches **$95.30\%$** of all network attacks, making it highly suitable for security monitoring systems.
-  \item The **Second Autoencoder** (anomaly-trained) is the most operationally balanced model, achieving an F1 of $0.7844$ and a precision of $77.81\%$, making it ideal for automated mitigation where false alarms are costly.
+  \item The proposed \textbf{Ensemble Autoencoder} achieves state-of-the-art anomaly discrimination (AUC = $0.9473$) and successfully catches \textbf{$97.10\%$} of all network attacks, making it highly suitable for security monitoring systems.
+  \item The \textbf{Second Autoencoder} (anomaly-trained) is the most operationally balanced model, achieving an F1 of $0.7712$ and a precision of $0.7615$, making it ideal for automated mitigation where false alarms are costly.
 \end{itemize}
 
 Future work will focus on:

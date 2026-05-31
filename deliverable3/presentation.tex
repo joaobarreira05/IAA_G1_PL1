@@ -195,13 +195,14 @@
     \begin{column}{0.6\textwidth}
       \centering
       \includegraphics[width=0.9\textwidth]{images/autoencoder_loss_comparison.png}\\
-      \scriptsize{Training Loss curves for both network branches}
+      \scriptsize{Training and validation Loss curves for both network branches}
     \end{column}
     \begin{column}{0.4\textwidth}
       \textbf{Convergence Analysis:}
       \begin{itemize}
-        \item Primary AE converged smoothly within 30 epochs (final MSE: 0.0615).
-        \item Secondary AE converged quickly (10 epochs) due to structured attack patterns.
+        \item Dynamic training using early stopping on validation reconstruction loss.
+        \item Primary AE converged and stopped at epoch 25.
+        \item Secondary AE converged and stopped at epoch 40.
         \item No overfitting observed on validation set.
       \end{itemize}
     \end{column}
@@ -217,18 +218,18 @@
       \hline
       & \multicolumn{3}{c|}{\textbf{Original (Imbalanced)}} & \multicolumn{3}{c}{\textbf{Balanced (50-50)}} \\
       \textbf{Model} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\ \hline
-      Isolation Forest & 0.4522 & 0.4625 & 0.4573 & 0.7770 & 0.4625 & 0.5798 \\
-      One-Class SVM & 0.3844 & 0.3943 & 0.3893 & 0.7159 & 0.3943 & 0.5085 \\
-      LOF & 0.1327 & 0.1372 & 0.1349 & 0.3902 & 0.1372 & 0.2030 \\
-      Autoencoder & 0.5545 & 0.5635 & 0.5589 & 0.8366 & 0.5635 & 0.6734 \\
-      Second AE & \textbf{0.7781} & 0.7907 & \textbf{0.7844} & \textbf{0.9375} & 0.7907 & 0.8579 \\
-      \textbf{Ensemble AE} & 0.5855 & \textbf{0.9530} & 0.7253 & 0.8505 & \textbf{0.9530} & \textbf{0.8989} \\ \hline
+      Isolation Forest & 0.4351 & 0.4453 & 0.4402 & 0.7639 & 0.4453 & 0.5627 \\
+      One-Class SVM & 0.3792 & 0.3859 & 0.3825 & 0.7202 & 0.3859 & 0.5026 \\
+      LOF & 0.4417 & 0.6678 & 0.5317 & 0.7680 & 0.6678 & 0.7144 \\
+      Autoencoder & 0.5308 & 0.5476 & 0.5391 & 0.8234 & 0.5476 & 0.6578 \\
+      Second AE & \textbf{0.7615} & 0.7812 & \textbf{0.7712} & \textbf{0.9265} & 0.7812 & 0.8477 \\
+      \textbf{Ensemble AE} & 0.5722 & \textbf{0.9710} & 0.7200 & 0.8448 & \textbf{0.9710} & \textbf{0.9035} \\ \hline
     \end{tabular}
   \end{table}
   \begin{itemize}
     \item \textbf{Deep Learning Dominance:} PyTorch Autoencoders far exceed classical.
-    \item \textbf{Ensemble AE:} Best recall (\textbf{95.3\%}) and AUC-ROC (\textbf{0.981}), crucial for maximum security.
-    \item \textbf{Second AE:} Best precision (\textbf{77.81\%} original) and F1 (\textbf{0.7844}), minimizing false alarms.
+    \item \textbf{Ensemble AE:} Best recall (\textbf{97.1\%}) and AUC-ROC (\textbf{0.947}), crucial for maximum security.
+    \item \textbf{Second AE:} Best precision (\textbf{76.15\%} original) and F1 (\textbf{0.7712}), minimizing false alarms.
   \end{itemize}
 \end{frame}
 
@@ -242,13 +243,13 @@
     \begin{column}{0.5\textwidth}
       \centering
       \includegraphics[width=0.85\textwidth]{images/ensemble_autoencoder_roc.png}\\
-      \scriptsize{ROC Curve (AUC = 0.981)}
+      \scriptsize{ROC Curve (AUC = 0.947)}
     \end{column}
   \end{columns}
   \vfill
   \begin{itemize}
-    \item Out of 16,697 actual anomalies in the test set, only 785 are missed.
-    \item The 58.55\% precision is due to the logical OR aggregating false positives, which is an acceptable compromise for security operations.
+    \item Out of 16,697 actual anomalies in the test set, only 484 are missed.
+    \item The 57.22\% precision is due to the logical OR aggregating false positives, which is an acceptable compromise for security operations.
   \end{itemize}
 \end{frame}
 
@@ -285,7 +286,7 @@
     \item \textbf{Key Takeaways:}
     \begin{enumerate}
       \item Unsupervised Deep Learning is highly successful for anomaly-based IDS.
-      \item Ensemble AE provides maximal security monitoring (95.3\% recall).
+      \item Ensemble AE provides maximal security monitoring (97.1\% recall).
       \item Secondary AE minimizes false alarms, suitable for automated mitigation.
     \end{enumerate}
     \item \textbf{Future Work:}

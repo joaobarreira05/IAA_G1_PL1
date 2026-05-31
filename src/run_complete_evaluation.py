@@ -73,7 +73,7 @@ def run_complete_evaluation():
     print("\n" + "-"*80)
     print("Model 3/6: LOCAL OUTLIER FACTOR")
     print("-"*80)
-    y_pred_lof, y_scores_lof = train_lof(X_train, X_test)
+    y_pred_lof, y_scores_lof = train_lof(X_train, X_test, y_train)
     
     eval_lof = EvaluationFramework(
         y_true=y_test,
@@ -87,7 +87,7 @@ def run_complete_evaluation():
     print("\n" + "-"*80)
     print("Model 4/6: AUTOENCODER (PRIMARY - Normal Data)")
     print("-"*80)
-    y_pred_ae, y_scores_ae, loss_ae = train_autoencoder(X_train, X_test, y_train)
+    y_pred_ae, y_scores_ae, loss_ae = train_autoencoder(X_train, X_val, X_test, y_train, y_val)
     
     eval_ae = EvaluationFramework(
         y_true=y_test,
@@ -101,7 +101,7 @@ def run_complete_evaluation():
     print("\n" + "-"*80)
     print("Model 5/6: AUTOENCODER (SECONDARY - Anomaly Data)")
     print("-"*80)
-    y_pred_ae2, y_scores_ae2, loss_ae2 = train_autoencoder_bad(X_train, X_test, y_train)
+    y_pred_ae2, y_scores_ae2, loss_ae2 = train_autoencoder_bad(X_train, X_val, X_test, y_train, y_val)
     
     eval_ae2 = EvaluationFramework(
         y_true=y_test,
@@ -117,7 +117,17 @@ def run_complete_evaluation():
     print("-"*80)
     print("Creating ensemble prediction (OR logic)...")
     y_pred_ensemble = (y_pred_ae | y_pred_ae2).astype(int)
-    y_scores_ensemble = y_scores_ae + y_scores_ae2
+    
+    # Min-max normalization to prevent cancellation and scale dominance
+    y_scores_ae_min = y_scores_ae.min()
+    y_scores_ae_max = y_scores_ae.max()
+    y_scores_ae_norm = (y_scores_ae - y_scores_ae_min) / (y_scores_ae_max - y_scores_ae_min + 1e-8)
+    
+    y_scores_ae2_min = y_scores_ae2.min()
+    y_scores_ae2_max = y_scores_ae2.max()
+    y_scores_ae2_norm = (y_scores_ae2 - y_scores_ae2_min) / (y_scores_ae2_max - y_scores_ae2_min + 1e-8)
+    
+    y_scores_ensemble = y_scores_ae_norm + y_scores_ae2_norm
     
     eval_ensemble = EvaluationFramework(
         y_true=y_test,

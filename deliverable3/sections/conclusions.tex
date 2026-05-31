@@ -7,8 +7,8 @@ The main conclusions of our investigation are:
 \begin{itemize}
   \item Classical unsupervised anomaly detection methods (LOF, OC-SVM, Isolation Forest) struggle severely in 70-dimensional spaces, validating the curse of dimensionality.
   \item PyTorch-based Deep Autoencoders overcome this bottleneck by mapping features into low-dimensional latent spaces, learning robust non-linear boundaries.
-  \item The proposed **Ensemble Autoencoder** achieves state-of-the-art anomaly discrimination (AUC = $0.9810$) and successfully catches **$95.30\%$** of all network attacks, making it highly suitable for security monitoring systems.
-  \item The **Second Autoencoder** (anomaly-trained) is the most operationally balanced model, achieving an F1 of $0.7844$ and a precision of $77.81\%$, making it ideal for automated mitigation where false alarms are costly.
+  \item The proposed \textbf{Ensemble Autoencoder} achieves state-of-the-art anomaly discrimination (AUC = $0.9473$) and successfully catches \textbf{$97.10\%$} of all network attacks, making it highly suitable for security monitoring systems.
+  \item The \textbf{Second Autoencoder} (anomaly-trained) is the most operationally balanced model, achieving an F1 of $0.7712$ and a precision of $0.7615$, making it ideal for automated mitigation where false alarms are costly.
 \end{itemize}
 
 Future work will focus on:

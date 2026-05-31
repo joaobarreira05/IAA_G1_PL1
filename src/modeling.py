@@ -104,11 +104,32 @@ def train_ocsvm(X_train, X_test, y_train):
     
     return y_pred, y_scores
 
-def train_lof(X_train, X_test):
+def train_lof(X_train, X_test, y_train=None):
     print("\nTraining Local Outlier Factor (Novelty Detection)...")
-    # LOF for novelty detection requires fit on X_train
+    
+    # Subsampling to 15k for speed (LOF is O(N^2) complexity and extremely slow on 395k rows)
+    if len(X_train) > 15_000:
+        if y_train is not None:
+            # We want to train on a subsample of normal data since novelty=True
+            y_arr = y_train.values.ravel() if hasattr(y_train, 'values') else np.asarray(y_train).ravel()
+            normal_idx = np.where(y_arr == 0)[0]
+            rng = np.random.default_rng(42)
+            chosen = rng.choice(normal_idx, min(15_000, len(normal_idx)), replace=False)
+            X_train_sub = X_train.iloc[chosen] if hasattr(X_train, 'iloc') else X_train[chosen]
+            print(f"NOTE: LOF trained on 15k clean normal subsample (speed optimization and novelty detection requirement).")
+        else:
+            X_train_sub = X_train.sample(n=15_000, random_state=42)
+            print(f"NOTE: LOF trained on 15k random subsample for speed.")
+    else:
+        if y_train is not None:
+            y_arr = y_train.values.ravel() if hasattr(y_train, 'values') else np.asarray(y_train).ravel()
+            normal_idx = np.where(y_arr == 0)[0]
+            X_train_sub = X_train.iloc[normal_idx] if hasattr(X_train, 'iloc') else X_train[normal_idx]
+        else:
+            X_train_sub = X_train
+
     clf = LocalOutlierFactor(n_neighbors=20, contamination=0.2, novelty=True, n_jobs=-1)
-    clf.fit(X_train)
+    clf.fit(X_train_sub)
     
     y_pred_raw = clf.predict(X_test)
     y_scores = -clf.decision_function(X_test)
@@ -116,6 +137,7 @@ def train_lof(X_train, X_test):
     y_pred = np.where(y_pred_raw == -1, 1, 0)
     
     return y_pred, y_scores
+
 
 # --- Autoencoder (PyTorch) ---
 
@@ -143,10 +165,11 @@ class Autoencoder(nn.Module):
         decoded = self.decoder(encoded)
         return decoded
 
-def train_autoencoder(X_train, X_test, y_train):
+def train_autoencoder(X_train, X_val, X_test, y_train, y_val):
     print("\nTraining Autoencoder (PyTorch)...")
     # For AE Anomaly Detection, we usually train ONLY on Normal data
     X_train_normal = X_train[y_train == 0].values
+    X_val_normal = X_val[y_val == 0].values
     
     input_dim = X_train_normal.shape[1]
     model = Autoencoder(input_dim)
@@ -156,10 +179,24 @@ def train_autoencoder(X_train, X_test, y_train):
     train_data = torch.FloatTensor(X_train_normal)
     train_loader = DataLoader(TensorDataset(train_data), batch_size=64, shuffle=True)
     
-    num_epochs = 30
+    val_data_tensor = torch.FloatTensor(X_val_normal)
+    val_loader = DataLoader(TensorDataset(val_data_tensor), batch_size=256, shuffle=False)
+    
+    max_epochs = 100
+    patience = 5
+    min_delta = 1e-6
+    best_val_loss = float('inf')
+    best_model_state = None
+    patience_counter = 0
+    
     model.train()
     loss_history = []
-    for epoch in range(num_epochs):
+    val_loss_history = []
+    
+    import copy
+    
+    for epoch in range(max_epochs):
+        model.train()
         epoch_loss = 0
         for data in train_loader:
             optimizer.zero_grad()
@@ -167,61 +204,90 @@ def train_autoencoder(X_train, X_test, y_train):
             loss = criterion(output, data[0])
             loss.backward()
             optimizer.step()
-            epoch_loss += loss.item()
-        avg_loss = epoch_loss / len(train_loader)
+            epoch_loss += loss.item() * data[0].size(0)
+        avg_loss = epoch_loss / len(X_train_normal)
         loss_history.append(avg_loss)
-        if (epoch+1) % 2 == 0:
-            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
+        
+        # Validation loss for early stopping
+        model.eval()
+        epoch_val_loss = 0
+        with torch.no_grad():
+            for data in val_loader:
+                output = model(data[0])
+                loss = criterion(output, data[0])
+                epoch_val_loss += loss.item() * data[0].size(0)
+        avg_val_loss = epoch_val_loss / len(X_val_normal)
+        val_loss_history.append(avg_val_loss)
+        
+        if (epoch+1) % 2 == 0 or epoch == 0:
+            print(f"Epoch [{epoch+1}/{max_epochs}], Loss: {avg_loss:.6f}, Val Loss: {avg_val_loss:.6f}")
+            
+        # Check early stopping
+        if avg_val_loss < best_val_loss - min_delta:
+            best_val_loss = avg_val_loss
+            best_model_state = copy.deepcopy(model.state_dict())
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            
+        if patience_counter >= patience:
+            print(f"Early stopping at epoch {epoch+1}. Best Val Loss: {best_val_loss:.6f}")
+            break
+            
+    # Restore best model state
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+        
+    num_epochs = len(loss_history)
     
     # Plot loss history
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, num_epochs+1), loss_history, marker='o', linewidth=2, markersize=4, color='#2E86AB')
+    plt.plot(range(1, num_epochs+1), loss_history, marker='o', linewidth=2, markersize=4, color='#2E86AB', label='Train Loss')
+    plt.plot(range(1, num_epochs+1), val_loss_history, marker='x', linewidth=2, markersize=4, color='#D36582', label='Val Loss')
     plt.xlabel('Epoch', fontsize=12, fontweight='bold')
     plt.ylabel('Loss (MSE)', fontsize=12, fontweight='bold')
-    plt.title('Autoencoder Training Loss over Epochs', fontsize=14, fontweight='bold')
+    plt.title('Autoencoder Training & Validation Loss over Epochs', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3)
+    plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(MODELS_DIR, "autoencoder_loss_history.png"), dpi=300)
     plt.close()
     print(f"✓ Loss history plot saved")
     
     # Save loss data for analysis
-    loss_df = pd.DataFrame({'Epoch': range(1, num_epochs+1), 'Loss': loss_history})
+    loss_df = pd.DataFrame({
+        'Epoch': range(1, num_epochs+1), 
+        'Train_Loss': loss_history,
+        'Val_Loss': val_loss_history
+    })
     loss_df.to_csv(os.path.join(MODELS_DIR, "autoencoder_loss_history.csv"), index=False)
-    
-    # Find optimal epoch (elbow point or minimum loss region)
-    min_loss_epoch = np.argmin(loss_history) + 1
-    print(f"Minimum loss at Epoch: {min_loss_epoch} (Loss: {loss_history[min_loss_epoch-1]:.6f})")
-    
-    # Detect elbow (where improvement slows down significantly)
-    loss_diff = np.diff(loss_history)
-    loss_diff_pct = (loss_diff / loss_history[:-1]) * 100
-    elbow_threshold = -0.5  # 0.5% improvement threshold
-    elbow_epoch = min_loss_epoch
-    for i in range(min_loss_epoch, len(loss_diff_pct)):
-        if abs(loss_diff_pct[i]) < abs(elbow_threshold):
-            elbow_epoch = i + 1
-            break
-    print(f"Suggested optimal epochs: ~{elbow_epoch} (elbow point)")
             
     # Evaluation
     model.eval()
     with torch.no_grad():
+        # Compute threshold on validation set (X_val) to avoid test leakage
+        val_data = torch.FloatTensor(X_val.values)
+        val_output = model(val_data)
+        val_mse = nn.functional.mse_loss(val_output, val_data, reduction='none').mean(dim=1).numpy()
+        
+        # Now evaluate on test set
         test_data = torch.FloatTensor(X_test.values)
         test_output = model(test_data)
         # Reconstruction error as anomaly score
         mse = nn.functional.mse_loss(test_output, test_data, reduction='none').mean(dim=1).numpy()
     
-    # Threshold selection (e.g., 95th percentile)
-    threshold = np.percentile(mse, 80) # Adjust based on expected contamination
+    # Threshold selection on X_val
+    threshold = np.percentile(val_mse, 80) # Adjust based on expected contamination
+    print(f"AE Threshold chosen from validation set: {threshold:.6f}")
     y_pred = (mse > threshold).astype(int)
     
     return y_pred, mse, loss_history
 
-def train_autoencoder_bad(X_train, X_test, y_train):
+def train_autoencoder_bad(X_train, X_val, X_test, y_train, y_val):
     print("\nTraining Second Autoencoder (trained on Anomalous data)...")
     # For this AE, we train ONLY on Anomalous (bad) data
     X_train_bad = X_train[y_train == 1].values
+    X_val_bad = X_val[y_val == 1].values
     
     input_dim = X_train_bad.shape[1]
     model = Autoencoder(input_dim)
@@ -231,10 +297,24 @@ def train_autoencoder_bad(X_train, X_test, y_train):
     train_data = torch.FloatTensor(X_train_bad)
     train_loader = DataLoader(TensorDataset(train_data), batch_size=64, shuffle=True)
     
-    num_epochs = 10
+    val_data_tensor = torch.FloatTensor(X_val_bad)
+    val_loader = DataLoader(TensorDataset(val_data_tensor), batch_size=256, shuffle=False)
+    
+    max_epochs = 100
+    patience = 5
+    min_delta = 1e-6
+    best_val_loss = float('inf')
+    best_model_state = None
+    patience_counter = 0
+    
     model.train()
     loss_history = []
-    for epoch in range(num_epochs):
+    val_loss_history = []
+    
+    import copy
+    
+    for epoch in range(max_epochs):
+        model.train()
         epoch_loss = 0
         for data in train_loader:
             optimizer.zero_grad()
@@ -242,40 +322,82 @@ def train_autoencoder_bad(X_train, X_test, y_train):
             loss = criterion(output, data[0])
             loss.backward()
             optimizer.step()
-            epoch_loss += loss.item()
-        avg_loss = epoch_loss / len(train_loader)
+            epoch_loss += loss.item() * data[0].size(0)
+        avg_loss = epoch_loss / len(X_train_bad)
         loss_history.append(avg_loss)
-        if (epoch+1) % 2 == 0:
-            print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}")
+        
+        # Validation loss for early stopping
+        model.eval()
+        epoch_val_loss = 0
+        with torch.no_grad():
+            for data in val_loader:
+                output = model(data[0])
+                loss = criterion(output, data[0])
+                epoch_val_loss += loss.item() * data[0].size(0)
+        avg_val_loss = epoch_val_loss / len(X_val_bad)
+        val_loss_history.append(avg_val_loss)
+        
+        if (epoch+1) % 2 == 0 or epoch == 0:
+            print(f"Epoch [{epoch+1}/{max_epochs}], Loss: {avg_loss:.6f}, Val Loss: {avg_val_loss:.6f}")
+            
+        # Check early stopping
+        if avg_val_loss < best_val_loss - min_delta:
+            best_val_loss = avg_val_loss
+            best_model_state = copy.deepcopy(model.state_dict())
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            
+        if patience_counter >= patience:
+            print(f"Early stopping at epoch {epoch+1}. Best Val Loss: {best_val_loss:.6f}")
+            break
+            
+    # Restore best model state
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+        
+    num_epochs = len(loss_history)
     
     # Plot loss history
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, num_epochs+1), loss_history, marker='s', linewidth=2, markersize=5, color='#A23B72')
+    plt.plot(range(1, num_epochs+1), loss_history, marker='s', linewidth=2, markersize=5, color='#A23B72', label='Train Loss')
+    plt.plot(range(1, num_epochs+1), val_loss_history, marker='x', linewidth=2, markersize=5, color='#F18F01', label='Val Loss')
     plt.xlabel('Epoch', fontsize=12, fontweight='bold')
     plt.ylabel('Loss (MSE)', fontsize=12, fontweight='bold')
-    plt.title('Second Autoencoder (Bad Traffic) Training Loss over Epochs', fontsize=14, fontweight='bold')
+    plt.title('Second Autoencoder (Bad Traffic) Training & Validation Loss over Epochs', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3)
+    plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(MODELS_DIR, "autoencoder_bad_loss_history.png"), dpi=300)
     plt.close()
     print(f"✓ Loss history plot saved")
     
     # Save loss data for analysis
-    loss_df = pd.DataFrame({'Epoch': range(1, num_epochs+1), 'Loss': loss_history})
+    loss_df = pd.DataFrame({
+        'Epoch': range(1, num_epochs+1), 
+        'Train_Loss': loss_history,
+        'Val_Loss': val_loss_history
+    })
     loss_df.to_csv(os.path.join(MODELS_DIR, "autoencoder_bad_loss_history.csv"), index=False)
             
     # Evaluation
     model.eval()
     with torch.no_grad():
+        # Compute threshold on validation set (X_val) to avoid test leakage
+        val_data = torch.FloatTensor(X_val.values)
+        val_output = model(val_data)
+        val_mse = nn.functional.mse_loss(val_output, val_data, reduction='none').mean(dim=1).numpy()
+        
+        # Now evaluate on test set
         test_data = torch.FloatTensor(X_test.values)
         test_output = model(test_data)
         # Reconstruction error as anomaly score
         mse = nn.functional.mse_loss(test_output, test_data, reduction='none').mean(dim=1).numpy()
     
-    # Threshold selection: Since it's trained on Anomalies, LOW error means Anomaly.
-    # We want to flag samples that look like the 'bad' data.
-    # If we assume ~20% of data is anomalous, we take the 20% with LOWEST error.
-    threshold = np.percentile(mse, 20) 
+    # Threshold selection on X_val: Since it's trained on Anomalies, LOW error means Anomaly.
+    # If we assume ~20% of data is anomalous, we take the 20% with LOWEST error on X_val.
+    threshold = np.percentile(val_mse, 20)
+    print(f"Secondary AE Threshold chosen from validation set: {threshold:.6f}")
     y_pred = (mse < threshold).astype(int)
     
     # For AUC calculation, y_scores should be higher for anomalies.
@@ -305,7 +427,7 @@ if __name__ == "__main__":
     
     if args.model in ["lof", "all"]:
         # 3. LOF
-        y_pred_lof, y_scores_lof = train_lof(X_train, X_test)
+        y_pred_lof, y_scores_lof = train_lof(X_train, X_test, y_train)
         results.append(evaluate_model("Local Outlier Factor", y_test, y_pred_lof, y_scores_lof))
     
     # Autoencoders section (ae and ae2 can be dependent)
@@ -314,12 +436,12 @@ if __name__ == "__main__":
     
     if args.model in ["ae", "ae2", "all"]:
         # 4. Primary Autoencoder
-        y_pred_ae, y_scores_ae = train_autoencoder(X_train, X_test, y_train)
+        y_pred_ae, y_scores_ae = train_autoencoder(X_train, X_val, X_test, y_train, y_val)
         results.append(evaluate_model("Autoencoder", y_test, y_pred_ae, y_scores_ae))
     
     if args.model in ["ae2", "all"]:
         # 5. Second Autoencoder (Bad Traffic)
-        y_pred_ae2, y_scores_ae2 = train_autoencoder_bad(X_train, X_test, y_train)
+        y_pred_ae2, y_scores_ae2 = train_autoencoder_bad(X_train, X_val, X_test, y_train, y_val)
         results.append(evaluate_model("Second Autoencoder", y_test, y_pred_ae2, y_scores_ae2))
         
         # 6. Ensemble (Primary + Second)
@@ -327,9 +449,16 @@ if __name__ == "__main__":
         # Logical OR for predictions to reduce False Negatives
         y_pred_ensemble = (y_pred_ae | y_pred_ae2).astype(int)
         
-        # Combined score for AUC: Sum of normalized scores (simple sum since they are same scale)
-        # Note: y_scores_ae2 is already -mse, which is higher for anomalies
-        y_scores_ensemble = y_scores_ae + y_scores_ae2
+        # Combined score for AUC: Sum of min-max normalized scores to prevent cancellation and scale dominance
+        y_scores_ae_min = y_scores_ae.min()
+        y_scores_ae_max = y_scores_ae.max()
+        y_scores_ae_norm = (y_scores_ae - y_scores_ae_min) / (y_scores_ae_max - y_scores_ae_min + 1e-8)
+        
+        y_scores_ae2_min = y_scores_ae2.min()
+        y_scores_ae2_max = y_scores_ae2.max()
+        y_scores_ae2_norm = (y_scores_ae2 - y_scores_ae2_min) / (y_scores_ae2_max - y_scores_ae2_min + 1e-8)
+        
+        y_scores_ensemble = y_scores_ae_norm + y_scores_ae2_norm
         
         results.append(evaluate_model("Ensemble Autoencoder", y_test, y_pred_ensemble, y_scores_ensemble))
     

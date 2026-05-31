@@ -78,17 +78,17 @@
 ### Slide 12: Training Convergence & Loss
 * **Visuals:** Training loss comparison curve for the Primary and Secondary Autoencoders over epochs.
 * **Gonçalo's Notes:**
-  > "O Autoencoder Primário convergiu suavemente até à época 29 com uma perda MSE final de 0.0615. A rede secundária convergiu mais rapidamente (em apenas 10 épocas) por os ataques terem padrões muito consistentes. Não observámos sobreajuste (overfitting) nos dados de validação, pois a capacidade foi controlada pelo estreitamento do bottleneck de 70 para 8 neurónios na camada central."
+  > "Os Autoencoders foram treinados dinamicamente com early stopping e paciência de 5 épocas para evitar sobreajuste. O Autoencoder Primário convergiu e parou na época 25, enquanto o Secundário treinou até à época 40. Não observámos overfitting nos dados de validação, uma vez que a perda de validação acompanhou de perto a de treino graças ao bottleneck central de 70 para 8 neurónios."
 
 ### Slide 13: Final Results & Comparison Table
 * **Visuals:** The main comparison table showing metrics for all 6 models under Original and Balanced distributions. Highlighting the Ensemble AE and Second AE.
 * **Gonçalo's Notes:**
-  > "Os resultados finais revelaram uma divisão clara. Os modelos de deep learning superaram amplamente os clássicos. O Autoencoder Ensemble alcançou uma área sob a curva ROC fantástica de 0.9810 e um Recall de 95.30%, apanhando quase todos os ataques no conjunto de teste. O Autoencoder Secundário destacou-se pela precisão, atingindo 77.81% na distribuição realista, o que reduz bastante os falsos alarmes."
+  > "Os resultados finais revelaram uma divisão clara. Os modelos de deep learning superaram amplamente os clássicos. Com a devida correção da nossa pipeline, o Local Outlier Factor também obteve um desempenho decente, com AUC de 0.7572. O Autoencoder Ensemble alcançou uma área sob a curva ROC fantástica de 0.9473 e um Recall de 97.10%, apanhando quase todos os ataques no conjunto de teste. O Autoencoder Secundário destacou-se pela precisão, atingindo 76.15% na distribuição realista, o que reduz bastante os falsos alarmes."
 
 ### Slide 14: Diagnostic Analysis: Ensemble Autoencoder
-* **Visuals:** Confusion matrix and ROC curve for the Ensemble Autoencoder (AUC = 0.981).
+* **Visuals:** Confusion matrix and ROC curve for the Ensemble Autoencoder (AUC = 0.947).
 * **Gonçalo's Notes:**
-  > "Ao analisar os diagnósticos da nossa melhor rede, vemos que o ROC sobe quase verticalmente. A matriz de confusão mostra que em 16.697 ataques de teste reais, apenas 785 passaram despercebidos. A precisão moderada de 58.55% gera cerca de 8% de falsos alarmes no tráfego normal. Em engenharia de segurança, este compromisso é altamente vantajoso: preferimos investigar falsos alarmes do que sofrer uma intrusão catastrófica silenciosa."
+  > "Ao analisar os diagnósticos do Ensemble, vemos que o ROC sobe rapidamente, atingindo um AUC de 0.947. A matriz de confusão mostra que, de 16.697 ataques de teste reais, apenas 484 passaram despercebidos — uma redução significativa face aos 785 anteriores. A precisão moderada de 57.22% gera cerca de 17.8% de falsos alarmes no tráfego normal. Em engenharia de segurança, este compromisso é altamente vantajoso: preferimos analisar alertas falsos antes que uma intrusão catastrófica ocorra."
 
 ### Slide 15: Critical Reflection & AI Tools
 * **Visuals:** Key insights: theory vs. practice gap, ethical dimensions (bias, false positives), and responsible AI tools selection rationale.

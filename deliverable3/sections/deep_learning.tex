@@ -35,15 +35,15 @@ To maximize detection rates and minimize false negatives (critical in security c
 For continuous ROC analysis, the combined score is defined as the sum of the normalized scores: $s_{\text{ensemble}}(\mathbf{x}) = s_{\text{primary}}(\mathbf{x}) + s_{\text{secondary}}(\mathbf{x})$.
 
 \subsection{Training Convergence and Analysis}
-The training of both autoencoders was performed using the Adam optimizer (learning rate = $0.001$, batch size = $64$). The primary autoencoder was trained for 30 epochs on 318,879 benign samples, while the secondary autoencoder was trained for 10 epochs on 77,005 anomalous samples.
+The training of both autoencoders was performed using the Adam optimizer (learning rate = $0.001$, batch size = $64$) with early stopping monitored on the validation set reconstruction loss (patience of 5 epochs). The primary autoencoder was trained on 318,879 benign samples and converged at epoch 25, while the secondary autoencoder was trained on 77,005 anomalous samples and converged at epoch 40.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.75\columnwidth]{images/autoencoder_loss_comparison.png}
-    \caption{Training loss (MSE) over epochs for the Primary and Secondary Autoencoders.}
+    \caption{Training and validation loss (MSE) over epochs for the Autoencoders.}
     \label{fig:loss_comparison}
 \end{figure}
 
-As shown in Figure~\ref{fig:loss_comparison}, the primary autoencoder converged smoothly, reaching its minimum MSE loss at Epoch 29 ($0.0615$). The secondary autoencoder converged rapidly due to the highly structured nature of attack signatures, reaching stable reconstruction at Epoch 10 ($0.0817$). No overfitting was observed on validation data.
+As shown in Figure~\ref{fig:loss_comparison}, both models converged smoothly. The validation loss tracks the training loss without divergence, confirming that early stopping successfully prevented overfitting while avoiding unnecessary training epochs. No overfitting was observed on validation data.
 
 % =============================================================
