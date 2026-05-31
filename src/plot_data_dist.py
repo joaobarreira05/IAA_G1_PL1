@@ -6,10 +6,16 @@ import numpy as np
 
 os.makedirs('evaluation_results', exist_ok=True)
 
+def load_label_col(path):
+    df = pd.read_csv(path)
+    assert len(df.columns) == 1 or 'Is_Anomaly' in df.columns, \
+        f"Unexpected columns in {path}: {list(df.columns)}"
+    return df.iloc[:, 0]
+
 try:
-    y_train = pd.read_csv('processed_data/y_train.csv')['Is_Anomaly']
-    y_val = pd.read_csv('processed_data/y_val.csv')['Is_Anomaly']
-    y_test = pd.read_csv('processed_data/y_test.csv')['Is_Anomaly']
+    y_train = load_label_col('processed_data/y_train.csv')
+    y_val   = load_label_col('processed_data/y_val.csv')
+    y_test  = load_label_col('processed_data/y_test.csv')
 except Exception as e:
     print("Could not load processed data:", e)
     exit(1)

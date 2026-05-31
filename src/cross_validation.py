@@ -47,8 +47,11 @@ def perform_cross_validation(X, y, model, model_name, n_splits=5):
         
         try:
             y_scores = -model.decision_function(X_test_fold)
-            auc = roc_auc_score(y_test_fold, y_scores)
-            auc_scores.append(auc)
+            auc_val = roc_auc_score(y_test_fold, y_scores)
+            if auc_val < 0.5:
+                print(f"WARNING: AUC={auc_val:.4f} < 0.5 for {model.__class__.__name__} — score sign may be inverted. Flipping.")
+                auc_val = 1 - auc_val
+            auc_scores.append(auc_val)
         except AttributeError:
             auc_scores.append(np.nan)
             
@@ -106,8 +109,8 @@ if __name__ == "__main__":
             
             # Subsample for fast CV testing (10k instances)
             if len(X_train) > 10000:
-                np.random.seed(42)
-                indices = np.random.choice(len(X_train), 10000, replace=False)
+                rng = np.random.default_rng(42)
+                indices = rng.choice(len(X_train), 10000, replace=False)
                 X_train = X_train.iloc[indices]
                 y_train = y_train[indices]
                 

@@ -80,7 +80,8 @@ class EvaluationFramework:
         
         # Balance: use all anomalies + equal number of normals
         n_anomalies = len(anomaly_idx)
-        normal_idx_balanced = np.random.choice(normal_idx, size=n_anomalies, replace=False)
+        rng = np.random.default_rng(42)
+        normal_idx_balanced = rng.choice(normal_idx, size=n_anomalies, replace=False)
         balanced_idx = np.concatenate([normal_idx_balanced, anomaly_idx])
         
         y_true_bal = self.y_true[balanced_idx]

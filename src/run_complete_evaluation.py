@@ -59,7 +59,7 @@ def run_complete_evaluation():
     print("\n" + "-"*80)
     print("Model 2/6: ONE-CLASS SVM")
     print("-"*80)
-    y_pred_ocsvm, y_scores_ocsvm = train_ocsvm(X_train, X_test)
+    y_pred_ocsvm, y_scores_ocsvm = train_ocsvm(X_train, X_test, y_train)
     
     eval_ocsvm = EvaluationFramework(
         y_true=y_test,

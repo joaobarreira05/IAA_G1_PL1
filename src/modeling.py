@@ -74,12 +74,25 @@ def train_isolation_forest(X_train, X_test):
     
     return y_pred, y_scores
 
-def train_ocsvm(X_train, X_test):
+def train_ocsvm(X_train, X_test, y_train):
     print("\nTraining One-Class SVM (this might take a while)...")
-    # Using a subset if too slow, but let's try with full focus first or sampled
-    # One-Class SVM is O(n^2), so for 280k rows it's very slow.
-    # Sampling 10% for training if it's too slow.
-    X_train_sub = X_train.sample(frac=0.1, random_state=42) if len(X_train) > 50000 else X_train
+    # Stratified 15k subsample consistent with CV tuning
+    if len(X_train) > 15_000:
+        y_arr = y_train.values.ravel() if hasattr(y_train, 'values') else np.asarray(y_train).ravel()
+        rng = np.random.default_rng(42)
+        normal_idx  = np.where(y_arr == 0)[0]
+        anomaly_idx = np.where(y_arr == 1)[0]
+        ratio = len(anomaly_idx) / len(y_arr)
+        n_anomaly = int(15_000 * ratio)
+        n_normal  = 15_000 - n_anomaly
+        chosen = np.concatenate([
+            rng.choice(normal_idx,  min(n_normal,  len(normal_idx)),  replace=False),
+            rng.choice(anomaly_idx, min(n_anomaly, len(anomaly_idx)), replace=False),
+        ])
+        X_train_sub = X_train.iloc[chosen] if hasattr(X_train, 'iloc') else X_train[chosen]
+        print(f"NOTE: OC-SVM trained on 15k stratified subsample (consistent with CV tuning).")
+    else:
+        X_train_sub = X_train
     
     clf = OneClassSVM(kernel='rbf', gamma='auto', nu=0.2)
     clf.fit(X_train_sub)
@@ -287,7 +300,7 @@ if __name__ == "__main__":
     
     if args.model in ["ocsvm", "all"]:
         # 2. OC-SVM
-        y_pred_ocsvm, y_scores_ocsvm = train_ocsvm(X_train, X_test)
+        y_pred_ocsvm, y_scores_ocsvm = train_ocsvm(X_train, X_test, y_train)
         results.append(evaluate_model("One-Class SVM", y_test, y_pred_ocsvm, y_scores_ocsvm))
     
     if args.model in ["lof", "all"]:
