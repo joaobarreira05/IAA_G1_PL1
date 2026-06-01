@@ -3,21 +3,17 @@
 % ─────────────────────────────────────────────────────────────
 
 \subsection{Machine Learning Problem Formulation}
-We formulate the anomaly-based network intrusion detection task as an \textbf{unsupervised binary classification problem}. The input to each model consists of a feature vector $\mathbf{x} \in \mathbb{R}^{d}$ (where $d = 70$ standardized network flow statistical attributes post-preprocessing). The model output is a binary prediction $y \in \{0, 1\}$, where $y=0$ denotes benign traffic (inliers) and $y=1$ denotes anomalous network traffic (outliers / cyberattacks). Since training data contains a realistic mix of both classes (~19.7\% anomaly prevalence) and labels are withheld during training, the algorithms must learn structural, density, or kernel boundaries natively from the unlabelled space.
+We formulate the anomaly-based network intrusion detection task as an \textbf{unsupervised binary classification problem}. The input to each model consists of a feature vector $\mathbf{x} \in \mathbb{R}^{d}$ representing 70 standardized network flow statistical attributes post-preprocessing. The model output is a binary prediction $y \in \{0, 1\}$, where $y=0$ denotes benign traffic (inliers) and $y=1$ denotes anomalous network traffic (outliers / cyberattacks). Since training data contains a realistic mix of both classes (~19.7\% anomaly prevalence) and labels are withheld during training, the algorithms must learn structural, density, or kernel boundaries natively from the unlabelled space.
 
 \subsection{Evaluation and Tuning Strategy: Separation of Thresholds}
 To address the teacher's concern regarding single-split validation, we implement a robust \textbf{3-fold Stratified Cross-Validation (CV)} on a 15,000-row stratified training subsample to select structural hyperparameters. 
 
-Critically, we introduce a key methodological improvement: **decision threshold parameters (\texttt{contamination}) are removed from the CV search grids**. Since contamination defines the operational decision boundary rather than the structural model, including it in CV grid tuning risks leaking supervised information and inflating F1 metrics. Instead, the CV grid search optimizes threshold-independent **AUC-ROC** to select structural parameters. Once the optimal structural configuration is locked, we perform a separate post-CV threshold sweep for \texttt{contamination} $\in \{0.05, 0.10, 0.15, 0.20, 0.25\}$ on the validation folds, optimizing the macro F1-score and evaluating on the held-out Test set.
+Critically, we introduce a key methodological improvement: \textbf{decision threshold parameters (\texttt{contamination}) are removed from the CV search grids}. Since contamination defines the operational decision boundary rather than the structural model, including it in CV grid tuning risks leaking supervised information and inflating F1 metrics. Instead, the CV grid search optimizes threshold-independent \textbf{AUC-ROC} to select structural parameters. Once the optimal structural configuration is locked, we perform a separate post-CV threshold sweep for \texttt{contamination} $\in \{0.05, 0.10, 0.15, 0.20, 0.25\}$ on the validation folds, optimizing the macro F1-score and evaluating on the held-out Test set.
 
 \subsection{Isolation Forest}
 
 \textbf{Operating Principle.}
-Isolation Forest \cite{liu2008isolation} is an ensemble of $T$ isolation trees. Each tree is constructed by recursively partitioning a random feature $q$ with a random split value $p$ until all instances are isolated. Because anomalies are rare and structurally distinct, they isolate much faster, requiring shorter tree path lengths $h(x)$. The anomaly score is defined as:
-\begin{equation}
-  s(x, n) = 2^{-\frac{\mathbb{E}[h(x)]}{c(n)}}, \quad c(n) = 2H(n-1) - \frac{2(n-1)}{n}
-\end{equation}
-where $H(i)$ is the harmonic number and $c(n)$ normalizes for sample size $n$. Points with $s(x, n) \to 1$ are flagged as anomalies.
+Isolation Forest \cite{liu2008isolation} is an ensemble of $T$ isolation trees. Each tree is constructed by recursively partitioning a random feature with a random split value until all instances are isolated. Because anomalies are rare and structurally distinct, they isolate much faster, requiring shorter tree path lengths. The anomaly score is then derived by normalizing the expected path length of a sample relative to the average path length of a tree grown with the same sample size. A score close to 1 indicates a highly isolated point and is flagged as an anomaly.
 
 \textbf{Hyperparameter Variation.}
 We vary structural parameters: \texttt{n\_estimators} $\in \{50, 100, 200\}$ and \texttt{max\_features} $\in \{0.50, 0.75, 1.0\}$. Contamination is tuned separately in validation sweeps. CV identified the optimal structural configuration as \texttt{max\_features=0.75} and \texttt{n\_estimators=100} (CV mean AUC = 0.814). Separate threshold tuning identified the optimal \texttt{contamination=0.20} (Figure~\ref{fig:if_heatmap}). 
@@ -33,11 +29,7 @@ We vary structural parameters: \texttt{n\_estimators} $\in \{50, 100, 200\}$ and
 \subsection{One-Class SVM}
 
 \textbf{Operating Principle.}
-One-Class SVM \cite{scholkopf2001ocsvm} maps data through a kernel $\phi(\mathbf{x})$ into a reproducing kernel Hilbert space and finds the maximum-margin hyperplane separating the data from the origin:
-\begin{equation}
-  \min_{\mathbf{w},\rho,\boldsymbol{\xi}} \frac{1}{2}\|\mathbf{w}\|^2 - \rho + \frac{1}{\nu n} \sum_i \xi_i, \quad \text{s.t. } \langle \mathbf{w}, \phi(\mathbf{x}_i) \rangle \geq \rho - \xi_i
-\end{equation}
-The decision function $f(\mathbf{x}) = \text{sgn}(\langle \mathbf{w}, \phi(\mathbf{x}) \rangle - \rho)$ outputs $-1$ for anomalies. The parameter $\nu$ controls the upper bound on training errors and the lower bound on support vectors.
+One-Class SVM \cite{scholkopf2001ocsvm} maps data through a kernel function into a high-dimensional reproducing kernel Hilbert space and fits a maximum-margin hyperplane separating the data from the coordinate origin. The decision boundary is established such that the hyperparameter $\nu$ acts as an upper bound on the fraction of training outliers and a lower bound on the number of support vectors. New data points that fall on the negative side of this hyperplane are flagged as anomalies.
 
 \textbf{Hyperparameter Variation.}
 We vary \texttt{kernel} $\in \{\text{rbf}, \text{poly}\}$, \texttt{nu} $\in \{0.05, 0.10, 0.15, 0.20, 0.25\}$, and \texttt{gamma} $\in \{\text{scale}, \text{auto}\}$. The RBF kernel consistently outperformed polynomial due to the highly non-linear, curved manifolds of raw flow data. The optimal tuned configuration is \texttt{kernel=rbf}, \texttt{nu=0.25}, and \texttt{gamma=auto} (CV F1 = 0.423, Figure~\ref{fig:ocsvm_heatmap}). Consistent with the CV grid search, training and tuning are executed on a stratified 15,000-row subsample to manage the algorithm's quadratic complexity.
@@ -52,11 +44,7 @@ We vary \texttt{kernel} $\in \{\text{rbf}, \text{poly}\}$, \texttt{nu} $\in \{0.
 \subsection{Local Outlier Factor}
 
 \textbf{Operating Principle.}
-LOF \cite{breunig2000lof} computes a local density estimate for each point $p$ based on its $k$-nearest-neighbour reachability distance. The local reachability density ($\text{lrd}$) and LOF score are defined as:
-\begin{equation}
-  \text{lrd}_k(p) = \frac{k}{\sum_{o} \text{reach-dist}_k(p, o)}, \quad \text{LOF}_k(p) = \frac{\sum_{o} \frac{\text{lrd}_k(o)}{\text{lrd}_k(p)}}{k}
-\end{equation}
-A score significantly greater than 1 signals an outlier.
+LOF \cite{breunig2000lof} computes a local density estimate for each point based on the distance to its $k$-nearest neighbours (local reachability density). An instance's outlier score is then calculated as the average ratio of its neighbours' densities to its own density. A score significantly greater than 1 indicates that the point resides in a substantially sparser region than its immediate neighbours, signaling a local anomaly.
 
 \textbf{Hyperparameter Variation.}
 We vary \texttt{n\_neighbors} ($k$) $\in \{5, 10, 20, 40, 60\}$. Grid search identified the optimal structural size as $k=60$ (CV F1 = 0.214). Contamination was tuned post-CV, selecting \texttt{contamination=0.25} (Figure~\ref{fig:lof_heatmap}). LOF performs poorly across all settings, reflecting the curse of dimensionality where distance-based ratios become undifferentiated in a 70-dimensional feature space.
@@ -81,8 +69,8 @@ Figure~\ref{fig:baseline_vs_best} compares baseline performance (default paramet
 
 The empirical results reveal that:
 \begin{enumerate}
-    \item **One-Class SVM** benefits most from systematic tuning, with F1 increasing by **+5.1 pp** ($0.381 \to 0.432$) and Recall jumping by **+10.6 pp** ($38.4\% \to 49.0\%$) due to the RBF kernel and $\nu=0.25$ alignment.
-    \item **LOF** gains **+4.2 pp** ($0.161 \to 0.203$), though its absolute F1 remains poor, confirming distance concentration limitations.
-    \item **Isolation Forest** shows highly stable performance ($0.448 \to 0.437$). The minor delta is within typical statistical variance, reflecting that the default contamination ($0.20$) happened to align near-perfectly with the actual class prior.
+    \item \textbf{One-Class SVM} benefits most from systematic tuning, with F1 increasing by \textbf{+5.1 pp} ($0.381 \to 0.432$) and Recall jumping by \textbf{+10.6 pp} ($38.4\% \to 49.0\%$) due to the RBF kernel and $\nu=0.25$ alignment.
+    \item \textbf{LOF} gains \textbf{+4.2 pp} ($0.161 \to 0.203$), though its absolute F1 remains poor, confirming distance concentration limitations.
+    \item \textbf{Isolation Forest} shows highly stable performance ($0.448 \to 0.437$). The minor delta is within typical statistical variance, reflecting that the default contamination ($0.20$) happened to align near-perfectly with the actual class prior.
 \end{enumerate}
 This empirical evidence directly answers the teacher's second question: optimizing for F1-score does not sacrifice Recall. In fact, tuning structural and threshold parameters simultaneously improved both F1 and Recall across all three models.

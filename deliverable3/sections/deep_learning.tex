@@ -3,36 +3,21 @@
 To address the limitations of classical algorithms in high-dimensional feature spaces, three deep unsupervised architectures were designed and trained using PyTorch: a Primary Autoencoder (normal-trained), a Secondary Autoencoder (anomaly-trained), and an Ensemble Autoencoder.
 
 \subsection{Primary Autoencoder (Normal-Trained)}
-The primary autoencoder is designed for reconstruction-error-based anomaly detection. It is trained exclusively on normal (benign) network traffic ($\mathbf{X}_{\text{train}}$ where $y_{\text{train}} = 0$) to learn a compact representation of standard network behavior. The model comprises an encoder $f_{\theta}$ and a decoder $g_{\phi}$, both parameterized by fully connected feedforward networks:
+The primary autoencoder is designed for reconstruction-error-based anomaly detection. It is trained exclusively on normal (benign) network traffic to learn a compact representation of standard network behavior. 
 
-\begin{equation}
-  \mathbf{z} = f_{\theta}(\mathbf{x}) = \sigma(\mathbf{W}_3 \sigma(\mathbf{W}_2 \sigma(\mathbf{W}_1 \mathbf{x} + \mathbf{b}_1) + \mathbf{b}_2) + \mathbf{b}_3)
-\end{equation}
-\begin{equation}
-  \mathbf{\hat{x}} = g_{\phi}(\mathbf{z}) = \sigma(\mathbf{W}_6 \sigma(\mathbf{W}_5 \sigma(\mathbf{W}_4 \mathbf{z} + \mathbf{b}_4) + \mathbf{b}_5) + \mathbf{b}_6)
-\end{equation}
+The model comprises an encoder and a decoder, both parameterized by fully connected feedforward layers. The encoder contractively maps the 70-dimensional scaled input vector through successive hidden layers of 32 and 16 units down to an 8-dimensional bottleneck latent space, regularizing the model to prevent identity mapping. The Rectified Linear Unit (ReLU) activation function is used between layers to capture non-linear relationships. The decoder then mirrors this structure, projecting the latent vector back up through hidden layers of 16 and 32 units to reconstruct the original 70 features. To ensure that the reconstructed output can fully represent standardized features that possess both positive and negative values, the output layer of the decoder uses a pure linear projection without any activation function.
 
-where $\sigma$ denotes the Rectified Linear Unit (ReLU) activation function, and $\mathbf{x} \in \mathbb{R}^{70}$ represents the scaled input. The network contracts the input to a low-dimensional bottleneck space ($\mathbb{R}^{70} \to \mathbb{R}^{32} \to \mathbb{R}^{16} \to \mathbb{R}^8$), regularizing the model to prevent identity mapping, before reconstructing the output ($\mathbb{R}^8 \to \mathbb{R}^{16} \to \mathbb{R}^{32} \to \mathbb{R}^{70}$). The training objective is to minimize the Mean Squared Error (MSE) reconstruction loss:
-
-\begin{equation}
-  \mathcal{L}_{\text{MSE}}(\theta, \phi) = \frac{1}{N} \sum_{i=1}^N \|\mathbf{x}^{(i)} - \mathbf{\hat{x}}^{(i)}\|^2
-\end{equation}
-
-During inference, anomalies are expected to yield high reconstruction errors, as the network has not seen anomalous behaviors during training. The anomaly score is defined as $s(\mathbf{x}) = \|\mathbf{x} - \mathbf{\hat{x}}\|^2$. A sample is classified as anomalous if $s(\mathbf{x}) > \tau_{\text{primary}}$, where $\tau_{\text{primary}}$ is set to the 80th percentile of the validation reconstruction error.
+The network is trained to minimize the Mean Squared Error (MSE) reconstruction loss, which measures the average squared Euclidean distance between the input features and their corresponding reconstructions. During inference, anomalies are expected to yield high reconstruction errors, as the network is not exposed to anomalous behaviors during training. The reconstruction error (MSE) is directly utilized as the anomaly score, and a sample is classified as anomalous if its score exceeds a chosen threshold selected from the validation set (set at the 80th percentile of validation reconstruction errors).
 
 \subsection{Secondary Autoencoder (Anomaly-Trained)}
-Following the complementary-signal paradigm, a secondary autoencoder was implemented with an identical encoder-decoder structure but trained exclusively on anomalous (attack) traffic ($y_{\text{train}} = 1$). This model learns the shared statistical features of malicious network behaviors. 
+Following the complementary-signal paradigm, a secondary autoencoder was implemented with an identical encoder-decoder structure but trained exclusively on anomalous (attack) traffic. This model learns the shared statistical features of malicious network behaviors. 
 
-Because it learns the patterns of attacks, anomalous samples yield low reconstruction errors, whereas benign samples produce high reconstruction errors. The anomaly score is defined as $s_2(\mathbf{x}) = -\|\mathbf{x} - \mathbf{\hat{x}}_2\|^2$ (where $\mathbf{\hat{x}}_2$ is the reconstruction from the secondary autoencoder), so that lower reconstruction errors yield higher anomaly scores. A sample is flagged if $s_2(\mathbf{x}) < \tau_{\text{secondary}}$, where $\tau_{\text{secondary}}$ is set to the 20th percentile.
+Because the secondary autoencoder is trained exclusively on attacks, anomalous samples yield low reconstruction errors, whereas benign samples produce high reconstruction errors. The anomaly score is defined as the negative reconstruction error, so that lower reconstruction errors yield higher anomaly scores. A sample is flagged if its anomaly score exceeds a threshold set at the 20th percentile of the validation set.
 
 \subsection{Ensemble Autoencoder}
-To maximize detection rates and minimize false negatives (critical in security contexts), an Ensemble Autoencoder was created by combining the primary and secondary models. The ensemble utilizes a logical OR-gate strategy to flag a sample as an anomaly if either model detects it:
+To maximize detection rates and minimize false negatives (critical in security contexts), an Ensemble Autoencoder was created by combining the primary and secondary models. 
 
-\begin{equation}
-  \hat{y}_{\text{ensemble}} = \hat{y}_{\text{primary}} \lor \hat{y}_{\text{secondary}}
-\end{equation}
-
-For continuous ROC analysis, the combined score is defined as the sum of the normalized scores: $s_{\text{ensemble}}(\mathbf{x}) = s_{\text{primary}}(\mathbf{x}) + s_{\text{secondary}}(\mathbf{x})$.
+The ensemble utilizes a logical OR-gate strategy to flag a sample as an anomaly if either the primary or secondary autoencoder flags it. For continuous ROC analysis, the combined score is defined as the sum of the normalized anomaly scores from the two models. To prevent one model's score from dominating the other due to different scale ranges, a Min-Max scaling is first applied to map both score distributions strictly into a unified range of 0 to 1 before they are summed.
 
 \subsection{Training Convergence and Analysis}
 The training of both autoencoders was performed using the Adam optimizer (learning rate = $0.001$, batch size = $64$) with early stopping monitored on the validation set reconstruction loss (patience of 5 epochs). The primary autoencoder was trained on 318,879 benign samples and converged at epoch 25, while the secondary autoencoder was trained on 77,005 anomalous samples and converged at epoch 40.
