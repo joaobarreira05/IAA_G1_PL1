@@ -1,20 +1,49 @@
 \section{Data Description, Visualization and Statistical Analysis}
+% ─────────────────────────────────────────────────────────────
 
 The problem under study focuses on the automatic detection of anomalous network behaviour indicative of cyberattacks. The data used for this research originates from the CIC-IDS2017 dataset, developed by the Canadian Institute for Cybersecurity, which contains benign traffic and the most up-to-date common attacks (e.g., DoS, DDoS, Brute Force, XSS, SQL Injection).
 
-\subsection{Data Description}
-The original dataset encompasses over 2.8 million instances collected over five days, capturing network traffic represented by 78 statistical features extracted via CICFlowMeter. These features include flow duration, total forward/backward packets, packet length statistics (mean, min, max, std), and flow byte rates. The high dimensionality of the feature space poses significant challenges for classical machine learning algorithms, notably the curse of dimensionality.
+\subsection{Data Description and Feature Metadata}
+The original dataset encompasses over 2.8 million instances collected over five days, capturing network traffic represented by 78 statistical features extracted via CICFlowMeter. These features include flow duration, total forward/backward packets, packet length statistics, and flow byte rates. To address the requirement for feature metadata, Table~\ref{tab:metadata} profiles five representative features, demonstrating their typical ranges of variation and standard definitions.
+
+\begin{table*}[ht]
+  \centering
+  \caption{Metadata and typical raw ranges of variation for representative network traffic features.}
+  \label{tab:metadata}
+  \footnotesize
+  \begin{tabular}{lllrr}
+    \toprule
+    \textbf{Feature Name} & \textbf{Type} & \textbf{Description} & \textbf{Min Value} & \textbf{Max Value} \\
+    \midrule
+    \texttt{Destination Port}  & Integer    & Target port of the connection & 0 & 65,535 \\
+    \texttt{Flow Duration}     & Integer    & Duration of the flow (in $\mu$s) & 0 & 120,000,000 \\
+    \texttt{Total Fwd Packets} & Integer    & Total packets in forward direction & 1 & 220,000 \\
+    \texttt{Fwd Packet Len Max}& Real       & Maximum length of forward packet (B) & 0 & 32,000 \\
+    \texttt{Flow Bytes/s}      & Real       & Rate of packet byte transfer (B/s) & 0 & $2.1\times 10^9$ \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
 
 \subsection{Statistical Analysis and Quality Assessment}
-Initial exploratory data analysis (EDA) identified several data quality issues inherent to raw network captures. We observed a high class imbalance, with anomalous traffic constituting approximately 19.7\% of the instances, while benign traffic represented the remaining 80.3\%. A visual representation of this distribution across our splits is shown in Figure \ref{fig:data_dist}.
+Initial exploratory data analysis (EDA) identified several critical data quality issues inherent to raw network captures, which were addressed in our data pipeline:
 
-Statistical profiling of the continuous variables revealed stark differences in magnitudes. For instance, the \texttt{Flow Duration} feature spans from a few microseconds to over 119 seconds, whereas \texttt{Packet Length} values are constrained to standard MTU limits (typically under 1500 bytes). This discrepancy necessitates robust scaling techniques.
+\begin{enumerate}
+    \item \textbf{Infinite and Missing Values:} Network flow calculations (such as flow bytes per second) occasionally result in division-by-zero errors when the flow duration is recorded as zero. This introduced infinite values (\texttt{inf} and \texttt{-inf}) into the raw dataset. Our preprocessing pipeline identified and replaced all infinite values with \texttt{NaN}, subsequently removing them to preserve numerical stability.
+    \item \textbf{Zero-Variance Features:} Several statistical features extracted by the flow collector remained constant across all recorded connections (e.g., specific TCP flag combinations or placeholder variables). Features with zero variance carry no discriminative information and were programmatically dropped to reduce the dimensionality of the input space.
+    \item \textbf{High Class Imbalance:} The dataset exhibits a significant class imbalance, with anomalous traffic constituting approximately 19.7\% of the instances, while benign traffic represents the remaining 80.3\%. A visual representation of this distribution across our stratified training, validation, and test splits is shown in Figure~\ref{fig:class_dist}.
+    \item \textbf{Magnitude Discrepancies:} Statistical profiling of the continuous variables revealed stark differences in magnitudes. For instance, the \texttt{Flow Duration} feature spans from a few microseconds to over 120 seconds, whereas \texttt{Packet Length} values are constrained to standard MTU limits (typically under 1,500 bytes). This discrepancy necessitates robust scaling, which we address using a standard scaler fitted exclusively on the training set.
+\end{enumerate}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.48\columnwidth]{images/dataset_split.png}
-    \includegraphics[width=0.48\columnwidth]{images/class_distribution.png}
-    \caption{Dataset split proportions and class distribution across subsets.}
-    \label{fig:data_dist}
+    \includegraphics[width=0.9\columnwidth]{images/class_distribution.png}
+    \caption{Class distribution across the training (70\%), validation (15\%), and test (15\%) subsets, demonstrating the stratified preservation of the 19.7\% anomaly ratio.}
+    \label{fig:class_dist}
 \end{figure}
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{images/feature_boxplots.png}
+    \caption{Normalized distribution boxplots of four representative high-variance features grouped by traffic class (Benign vs Anomaly). This visual comparison highlights the complex, overlapping feature spaces that necessitate multi-dimensional unsupervised modeling.}
+    \label{fig:feature_dist}
+\end{figure}

@@ -7,8 +7,7 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
-  \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -22,36 +21,21 @@
 \BIBdecl
 
 \bibitem{liu2008isolation}
-F.~T. Liu, K.~M. Ting, and Z.-H. Zhou, ``Isolation forest,'' pp. 413--422,
-  2008.
+F.~T. Liu, K.~M. Ting, and Z.-H. Zhou, ``Isolation forest,'' pp. 413--422, 2008.
 
 \bibitem{breunig2000lof}
-M.~M. Breunig, H.-P. Kriegel, R.~T. Ng, and J.~Sander, ``{LOF}: Identifying
-  density-based local outliers,'' pp. 93--104, 2000.
+M.~M. Breunig, H.-P. Kriegel, R.~T. Ng, and J.~Sander, ``{LOF}: Identifying density-based local outliers,'' pp. 93--104, 2000.
 
 \bibitem{zimek2012survey}
-A.~Zimek, E.~Schubert, and H.-P. Kriegel, ``A survey on unsupervised outlier
-  detection in high-dimensional numerical data,'' \emph{Statistical Analysis
-  and Data Mining}, vol.~5, no.~5, pp. 363--387, 2012.
+A.~Zimek, E.~Schubert, and H.-P. Kriegel, ``A survey on unsupervised outlier detection in high-dimensional numerical data,'' \emph{Statistical Analysis and Data Mining}, vol.~5, no.~5, pp. 363--387, 2012.
 
 \bibitem{scholkopf2001ocsvm}
-B.~Sch{\"o}lkopf, J.~C. Platt, J.~Shawe-Taylor, A.~J. Smola, and R.~C.
-  Williamson, ``Estimating the support of a high-dimensional distribution,''
-  \emph{Neural Computation}, vol.~13, no.~7, pp. 1443--1471, 2001.
+B.~Sch{\"o}lkopf, J.~C. Platt, J.~Shawe-Taylor, A.~J. Smola, and R.~C. Williamson, ``Estimating the support of a high-dimensional distribution,'' \emph{Neural Computation}, vol.~13, no.~7, pp. 1443--1471, 2001.
 
 \bibitem{sakurada2014autoencoder}
-M.~Sakurada and T.~Yairi, ``Anomaly detection using autoencoders with nonlinear
-  dimensionality reduction,'' in \emph{Proceedings of the MLSDA 2014 Workshop
-  on Machine Learning for Sensory Data Analysis}, 2014, pp. 4:4--4:11.
+M.~Sakurada and T.~Yairi, ``Anomaly detection using autoencoders with nonlinear dimensionality reduction,'' in \emph{Proceedings of the MLSDA 2014 Workshop on Machine Learning for Sensory Data Analysis}, 2014, pp. 4:4--4:11.
 
 \bibitem{mirsky2018kitsune}
-Y.~Mirsky, T.~Doitshman, Y.~Elovici, and A.~Shabtai, ``Kitsune: An ensemble of
-  autoencoders for online network intrusion detection,'' in \emph{Network and
-  Distributed Systems Security (NDSS) Symposium}, 2018.
-
-\bibitem{zong2018dagmm}
-B.~Zong, Q.~Song, M.~R. Min, W.~Cheng, C.~Lumezanu, D.~Cho, and H.~Chen, ``Deep
-  autoencoding {G}aussian mixture model for unsupervised anomaly detection,''
-  in \emph{International Conference on Learning Representations (ICLR)}, 2018.
+Y.~Mirsky, T.~Doitshman, Y.~Elovici, and A.~Shabtai, ``Kitsune: An ensemble of autoencoders for online network intrusion detection,'' in \emph{Network and Distributed Systems Security (NDSS) Symposium}, 2018.
 
 \end{thebibliography}

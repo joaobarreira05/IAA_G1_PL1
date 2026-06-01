@@ -29,6 +29,8 @@ plt.pie(sizes, labels=splits, autopct='%1.1f%%', colors=['#2E86AB', '#F24236', '
         startangle=90, textprops={'fontsize': 12, 'weight': 'bold'})
 plt.title('Dataset Split Proportions', fontsize=14, fontweight='bold')
 plt.savefig('evaluation_results/dataset_split.png', dpi=300)
+if os.path.exists('../deliverable3/images'):
+    plt.savefig('../deliverable3/images/dataset_split.png', dpi=300)
 plt.close()
 
 # Plot 2: Class Distribution across splits
@@ -44,17 +46,24 @@ data = {
 df_dist = pd.DataFrame(data)
 
 plt.figure(figsize=(10, 6))
-sns.barplot(x='Split', y='Count', hue='Class', data=df_dist, palette=['#2E86AB', '#F24236'])
+ax = sns.barplot(x='Split', y='Count', hue='Class', data=df_dist, palette=['#2E86AB', '#F24236'])
 plt.title('Class Distribution Across Splits', fontsize=14, fontweight='bold')
 plt.xlabel('Dataset Split', fontsize=12, fontweight='bold')
 plt.ylabel('Number of Instances', fontsize=12, fontweight='bold')
 plt.grid(axis='y', alpha=0.3)
-for p in plt.gca().patches:
-    plt.gca().annotate(f"{int(p.get_height()):,}", (p.get_x() + p.get_width() / 2., p.get_height()),
-                ha='center', va='center', xytext=(0, 10), textcoords='offset points', fontsize=10)
+
+# Fix the annotation loop: only annotate real visible bars (> 0) to avoid phantom zeroes
+for p in ax.patches:
+    height = p.get_height()
+    if height > 0:
+        ax.annotate(f"{int(height):,}", (p.get_x() + p.get_width() / 2., height),
+                    ha='center', va='center', xytext=(0, 10), textcoords='offset points', fontsize=10)
+
 plt.legend(title='Traffic Type')
 plt.tight_layout()
 plt.savefig('evaluation_results/class_distribution.png', dpi=300)
+if os.path.exists('../deliverable3/images'):
+    plt.savefig('../deliverable3/images/class_distribution.png', dpi=300)
 plt.close()
 
 print("Distribution plots generated.")

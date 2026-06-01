@@ -1,11 +1,18 @@
 \section{Data Preprocessing}
+% ─────────────────────────────────────────────────────────────
 
-To construct the final input for the machine learning algorithms, an automated data processing pipeline was developed, consisting of the following sequential steps:
+To construct the final structured input for both classical and deep learning models, we developed an offline preprocessing pipeline. This pipeline enforces mathematical consistency and strict separation between evaluation folds. The processing sequence is structured as follows:
 
 \begin{enumerate}
-    \item \textbf{Data Cleaning:} We identified the presence of invalid structural values, including whitespace in column headers, and critical numerical anomalies. Specifically, `Infinity` values (arising from division by zero in bandwidth calculations like \texttt{Flow Bytes/s}) and `NaN` values were eliminated. As these affected less than 0.1\% of the dataset, direct removal (\textit{dropna}) was preferred over imputation to prevent the introduction of synthetic bias into the network behaviour distribution.
-    \item \textbf{Dimensionality Reduction (Zero-Variance Check):} To mitigate computational noise, features demonstrating zero variance across the network captures were pruned. Eight features (e.g., \texttt{Bwd PSH Flags}, \texttt{Fwd Avg Bytes/Bulk}) were removed as they provide no discriminative power for distance-based detection mechanisms.
-    \item \textbf{Stratified Sampling:} Given the massive size of the dataset ($>$1GB), loading the entire corpus triggered Out-Of-Memory (OOM) failures for algorithms with quadratic complexity ($\mathcal{O}(n^2)$). A 20\% stratified sampling was implemented, preserving the native 80/20 class imbalance while rendering the dataset computationally tractable ($\approx 565,000$ instances).
-    \item \textbf{Data Split and Scaling:} The sample was split into 70\% Training, 15\% Validation, and 15\% Testing partitions. To ensure proper convergence of distance-based models and neural networks, attributes were scaled using \textit{StandardScaler}. To rigorously prevent data leakage, the scaler was fitted exclusively on the Training set and subsequently used to transform the Validation and Test sets.
+    \item \textbf{Data Cleaning:} Column names were stripped of leading/trailing whitespaces to avoid structural reference errors. We identified invalid numerical entries, including missing values (\texttt{NaN}) and infinite calculations (\texttt{inf}) arising from division-by-zero errors in flow rate features (e.g., \texttt{Flow Bytes/s}). These rows constituted less than 0.1\% of the raw data and were dropped directly, avoiding synthetic imputation bias.
+    \item \textbf{Dimensionality Reduction:} Statistical profiling of the 78 raw features identified columns with zero variance (e.g., constant TCP flags or empty bulk rate columns) and non-numeric metadata columns. Programmatically removing these constant and non-numeric features reduced our input dimensionality from 78 to 70 active features, mitigating computational complexity and reducing collinear noise. The redundant correlation structure of the highest-variance features is visualized in Figure~\ref{fig:feature_corr}.
+    \item \textbf{Stratified Sampling:} Given that the full CIC-IDS2017 dataset exceeds 2.8 million rows, training distance and kernel-based models with quadratic complexity ($\mathcal{O}(n^2)$) is computationally prohibitive. A 20\% stratified random sample was extracted, yielding approximately 565,000 instances while precisely preserving the native class ratio of 80.3\% benign and 19.7\% anomalous traffic.
+    \item \textbf{Stratified Split and Scaling:} The stratified sample was partitioned into 70\% Training, 15\% Validation, and 15\% Testing sets. To ensure proper convergence of distance-based models (LOF, OC-SVM) and neural networks (Autoencoders), features were normalized using \textit{StandardScaler}. To prevent data leakage, the scaler was fitted exclusively on the Training partition and subsequently applied to transform the Validation and Test sets.
 \end{enumerate}
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.95\columnwidth]{images/feature_correlation.png}
+    \caption{Correlation matrix heatmap of the top 15 high-variance features post-preprocessing. The high density of near-perfect correlations ($r \approx 1.0$) illustrates the significant feature redundancy inherent in raw flow statistical captures, justifying feature pruning.}
+    \label{fig:feature_corr}
+\end{figure}
