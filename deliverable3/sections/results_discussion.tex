@@ -32,7 +32,7 @@ Table~\ref{tab:final_results} presents the comparative performance across all te
   \item \textbf{Failure of Classical Baselines:} Isolation Forest (AUC = $0.6901$, F1 = $0.4402$) and One-Class SVM (AUC = $0.6092$, F1 = $0.3825$) provide poor performance. Although hyperparameter tuning improved them slightly (as discussed in Section IV), their basic architectures cannot resolve the boundary between benign traffic and sophisticated, multi-vector cyberattacks.
 \end{enumerate}
 
-\subsection{Ensemble Autoencoder: The Security Champion}
+\subsection{Ensemble Autoencoder: The Best Option}
 The \textbf{Ensemble Autoencoder} is the best performing model overall, achieving a strong AUC-ROC of \textbf{$0.9473$} and an exceptional Recall of \textbf{$97.10\%$} under both original and balanced scenarios. In a real-world Security Operations Center (SOC), a recall of 97.10\% is highly desirable because it ensures that almost all network attacks are intercepted. 
 
 The main drawback is a moderate precision of \textbf{$57.22\%$} under the original distribution, representing a false positive rate of $\sim 17.8\%$. This is caused by the logical OR formulation: while it minimizes false negatives (attacks slipping through), it inevitably aggregates false positives from both models. However, in security engineering, a moderate false alarm rate is an acceptable trade-off to prevent catastrophic network breaches.
