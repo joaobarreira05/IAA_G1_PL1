@@ -10,7 +10,7 @@ To construct the final structured input for both classical and deep learning mod
     \item \textbf{Stratified Split and Scaling:} The stratified sample was partitioned into 70\% Training, 15\% Validation, and 15\% Testing sets. To ensure proper convergence of distance-based models (LOF, OC-SVM) and neural networks (Autoencoders), features were normalized using \textit{StandardScaler}. To prevent data leakage, the scaler was fitted exclusively on the Training partition and subsequently applied to transform the Validation and Test sets.
 \end{enumerate}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.95\columnwidth]{images/feature_correlation.png}
     \caption{Correlation matrix heatmap of the top 15 high-variance features post-preprocessing. The high density of near-perfect correlations ($r \approx 1.0$) illustrates the significant feature redundancy inherent in raw flow statistical captures, justifying feature pruning.}

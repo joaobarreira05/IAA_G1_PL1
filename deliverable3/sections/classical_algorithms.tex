@@ -1,4 +1,3 @@
-[ignoring loop detection]
 \section{Classical Algorithms: Description and Hyperparameters}
 % ─────────────────────────────────────────────────────────────
 
@@ -18,12 +17,18 @@ Isolation Forest \cite{liu2008isolation} is an ensemble of $T$ isolation trees. 
 \textbf{Hyperparameter Variation.}
 We vary structural parameters: \texttt{n\_estimators} $\in \{50, 100, 200\}$ and \texttt{max\_features} $\in \{0.50, 0.75, 1.0\}$. Contamination is tuned separately in validation sweeps. CV identified the optimal structural configuration as \texttt{max\_features=0.75} and \texttt{n\_estimators=100} (CV mean AUC = 0.814). Separate threshold tuning identified the optimal \texttt{contamination=0.20} (Figure~\ref{fig:if_heatmap}). 
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.48\columnwidth]{../tuning_results/if_heatmap.png}
-  \includegraphics[width=0.48\columnwidth]{../tuning_results/if_contamination_effect.png}
-  \caption{Left: IF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across candidate contamination values.}
+  \includegraphics[width=0.85\columnwidth]{../tuning_results/if_heatmap.png}
+  \caption{IF structural tuning mean CV F1 heatmap (n\_estimators × max\_features).}
   \label{fig:if_heatmap}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{../tuning_results/if_contamination_effect.png}
+  \caption{IF validation F1 threshold sweep across candidate contamination values.}
+  \label{fig:if_contamination}
 \end{figure}
 
 \subsection{One-Class SVM}
@@ -34,7 +39,7 @@ One-Class SVM \cite{scholkopf2001ocsvm} maps data through a kernel function into
 \textbf{Hyperparameter Variation.}
 We vary \texttt{kernel} $\in \{\text{rbf}, \text{poly}\}$, \texttt{nu} $\in \{0.05, 0.10, 0.15, 0.20, 0.25\}$, and \texttt{gamma} $\in \{\text{scale}, \text{auto}\}$. The RBF kernel consistently outperformed polynomial due to the highly non-linear, curved manifolds of raw flow data. The optimal tuned configuration is \texttt{kernel=rbf}, \texttt{nu=0.25}, and \texttt{gamma=auto} (CV F1 = 0.423, Figure~\ref{fig:ocsvm_heatmap}). Consistent with the CV grid search, training and tuning are executed on a stratified 15,000-row subsample to manage the algorithm's quadratic complexity.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\columnwidth]{../tuning_results/ocsvm_heatmap.png}
   \caption{OC-SVM mean CV F1-Score across nu and gamma configurations.}
@@ -49,18 +54,24 @@ LOF \cite{breunig2000lof} computes a local density estimate for each point based
 \textbf{Hyperparameter Variation.}
 We vary \texttt{n\_neighbors} ($k$) $\in \{5, 10, 20, 40, 60\}$. Grid search identified the optimal structural size as $k=60$ (CV F1 = 0.214). Contamination was tuned post-CV, selecting \texttt{contamination=0.25} (Figure~\ref{fig:lof_heatmap}). LOF performs poorly across all settings, reflecting the curse of dimensionality where distance-based ratios become undifferentiated in a 70-dimensional feature space.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.48\columnwidth]{../tuning_results/lof_heatmap.png}
-  \includegraphics[width=0.48\columnwidth]{../tuning_results/lof_neighbors_effect.png}
-  \caption{Left: LOF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across contamination values.}
+  \includegraphics[width=0.85\columnwidth]{../tuning_results/lof_heatmap.png}
+  \caption{LOF structural tuning mean CV F1 heatmap (n\_neighbors).}
   \label{fig:lof_heatmap}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{../tuning_results/lof_neighbors_effect.png}
+  \caption{LOF validation F1 threshold sweep across contamination values.}
+  \label{fig:lof_contamination}
 \end{figure}
 
 \subsection{Baseline vs. Tuned Performance}
 Figure~\ref{fig:baseline_vs_best} compares baseline performance (default parameters) against best-tuned configurations on the held-out Test set (trained on identical 15,000-row stratified training partitions to isolate the tuning effect). 
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\columnwidth]{../tuning_results/baseline_vs_best.png}
   \caption{Test-set F1-Score: default baseline vs. best hyperparameter configuration.}

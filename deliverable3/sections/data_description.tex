@@ -34,14 +34,14 @@ Initial exploratory data analysis (EDA) identified several critical data quality
     \item \textbf{Magnitude Discrepancies:} Statistical profiling of the continuous variables revealed stark differences in magnitudes. For instance, the \texttt{Flow Duration} feature spans from a few microseconds to over 120 seconds, whereas \texttt{Packet Length} values are constrained to standard MTU limits (typically under 1,500 bytes). This discrepancy necessitates robust scaling, which we address using a standard scaler fitted exclusively on the training set.
 \end{enumerate}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.9\columnwidth]{images/class_distribution.png}
     \caption{Class distribution across the training (70\%), validation (15\%), and test (15\%) subsets, demonstrating the stratified preservation of the 19.7\% anomaly ratio.}
     \label{fig:class_dist}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.95\columnwidth]{images/feature_boxplots.png}
     \caption{Normalized distribution boxplots of four representative high-variance features grouped by traffic class (Benign vs Anomaly). This visual comparison highlights the complex, overlapping feature spaces that necessitate multi-dimensional unsupervised modeling.}

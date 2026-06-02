@@ -40,7 +40,7 @@ The main drawback is a moderate precision of \textbf{$57.22\%$} under the origin
 \subsection{Second Autoencoder: The Operational Alternative}
 The \textbf{Second Autoencoder} (trained on anomalous traffic) behaves as the most balanced standalone model. Under the original distribution, it achieves the highest F1-Score (\textbf{$0.7712$}) and the highest Precision (\textbf{$0.7615$}). It correctly identifies $78.12\%$ of anomalies while generating very few false alarms (Precision of $92.65\%$ on the balanced subset). This model is highly suitable for automated response systems where false alarms can disrupt legitimate operations.
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.46\columnwidth]{../evaluation_results/ensemble_autoencoder_cm.png}
     \includegraphics[width=0.46\columnwidth]{../evaluation_results/ensemble_autoencoder_roc.png}

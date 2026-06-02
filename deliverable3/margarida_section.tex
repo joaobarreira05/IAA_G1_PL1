@@ -81,7 +81,7 @@ where $H(i)$ is the $i$-th harmonic number and $c(n)$ normalises for sample size
 \textbf{Tuning Results.}
 Figure~\ref{fig:if_heatmap} shows the mean CV F1-score across the full $3 \times 4 \times 3 = 36$-candidate grid. The best configuration (\texttt{n\_estimators=200}, \texttt{contamination=0.25}, \texttt{max\_features=1.0}) achieves a test F1 of 0.345, representing a gain of $+5.6$ percentage points over the default baseline (\texttt{n\_estimators=100}, \texttt{contamination=0.20}, test F1 = 0.289).
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.48\columnwidth]{../tuning_results/if_heatmap.png}
   \includegraphics[width=0.48\columnwidth]{../tuning_results/if_contamination_effect.png}
@@ -112,7 +112,7 @@ A new point $\mathbf{x}$ is classified as anomalous if $f(\mathbf{x}) = \text{sg
 \textbf{Tuning Results.}
 Figure~\ref{fig:ocsvm_heatmap} shows that the RBF kernel consistently outperforms polynomial for this dataset. The best configuration (\texttt{kernel=rbf}, \texttt{nu=0.25}, \texttt{gamma=scale}) achieves a test F1 of 0.273 vs.~the baseline 0.243 ($+3.0$~pp). Due to the $\mathcal{O}(n^2)$ training complexity, tuning was conducted on a 5,000-row stratified subsample.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\columnwidth]{../tuning_results/ocsvm_heatmap.png}
   \caption{OC-SVM mean CV F1-Score heatmap (nu × gamma per kernel).}
@@ -141,7 +141,7 @@ A LOF score $\gg 1$ signals that $p$ is significantly less dense than its neighb
 \textbf{Tuning Results.}
 As shown in Figure~\ref{fig:lof_heatmap}, LOF is the most sensitive of the three models to hyperparameter choice, yet its overall CV F1 remains below 0.20 regardless of configuration. This confirms the theoretical expectation: LOF's density-ratio approach degrades severely in the 70-dimensional feature space due to distance concentration \cite{zimek2012survey}.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.48\columnwidth]{../tuning_results/lof_heatmap.png}
   \includegraphics[width=0.48\columnwidth]{../tuning_results/lof_neighbors_effect.png}
@@ -156,7 +156,7 @@ Figure~\ref{fig:baseline_vs_best} compares the default-parameter baseline agains
 
 Isolation Forest benefits most from tuning ($+5.6$~pp F1: 0.289~$\to$~0.345), OC-SVM gains modestly ($+3.0$~pp: 0.243~$\to$~0.273), and LOF shows negligible improvement ($+0.8$~pp: 0.174~$\to$~0.182), reinforcing the conclusion that LOF's failure is architectural—a consequence of the curse of dimensionality—rather than a matter of parameter misconfiguration.
 
-\begin{figure}[ht]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\columnwidth]{../tuning_results/baseline_vs_best.png}
   \caption{Test-set F1-Score: default baseline vs.\ best hyperparameter configuration.}

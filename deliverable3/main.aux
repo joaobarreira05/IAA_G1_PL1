@@ -23,13 +23,12 @@
 \newlabel{tab:sota}{{I}{2}{Summary of reviewed anomaly detection methods. AUC values are not directly comparable across datasets and are reported as published}{table.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Data Description and Feature Metadata}{2}{subsection.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Statistical Analysis and Quality Assessment}{2}{subsection.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {III}Data Preprocessing}{2}{section.3}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Class distribution across the training (70\%), validation (15\%), and test (15\%) subsets, demonstrating the stratified preservation of the 19.7\% anomaly ratio.}}{2}{figure.1}\protected@file@percent }
 \newlabel{fig:class_dist}{{1}{2}{Class distribution across the training (70\%), validation (15\%), and test (15\%) subsets, demonstrating the stratified preservation of the 19.7\% anomaly ratio}{figure.1}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Normalized distribution boxplots of four representative high-variance features grouped by traffic class (Benign vs Anomaly). This visual comparison highlights the complex, overlapping feature spaces that necessitate multi-dimensional unsupervised modeling.}}{2}{figure.2}\protected@file@percent }
 \newlabel{fig:feature_dist}{{2}{2}{Normalized distribution boxplots of four representative high-variance features grouped by traffic class (Benign vs Anomaly). This visual comparison highlights the complex, overlapping feature spaces that necessitate multi-dimensional unsupervised modeling}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Data Preprocessing}{2}{section.3}\protected@file@percent }
 \citation{liu2008isolation}
-\citation{scholkopf2001ocsvm}
 \@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Metadata and typical raw ranges of variation for representative network traffic features.}}{3}{table.2}\protected@file@percent }
 \newlabel{tab:metadata}{{II}{3}{Metadata and typical raw ranges of variation for representative network traffic features}{table.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Correlation matrix heatmap of the top 15 high-variance features post-preprocessing. The high density of near-perfect correlations ($r \approx 1.0$) illustrates the significant feature redundancy inherent in raw flow statistical captures, justifying feature pruning.}}{3}{figure.3}\protected@file@percent }
@@ -38,36 +37,40 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Machine Learning Problem Formulation}{3}{subsection.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Evaluation and Tuning Strategy: Separation of Thresholds}{3}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Isolation Forest}{3}{subsection.4.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Left: IF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across candidate contamination values.}}{3}{figure.4}\protected@file@percent }
-\newlabel{fig:if_heatmap}{{4}{3}{Left: IF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across candidate contamination values}{figure.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}One-Class SVM}{3}{subsection.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces IF structural tuning mean CV F1 heatmap (n\_estimators × max\_features).}}{3}{figure.4}\protected@file@percent }
+\newlabel{fig:if_heatmap}{{4}{3}{IF structural tuning mean CV F1 heatmap (n\_estimators × max\_features)}{figure.4}{}}
+\citation{scholkopf2001ocsvm}
 \citation{breunig2000lof}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces OC-SVM mean CV F1-Score across nu and gamma configurations.}}{4}{figure.5}\protected@file@percent }
-\newlabel{fig:ocsvm_heatmap}{{5}{4}{OC-SVM mean CV F1-Score across nu and gamma configurations}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces IF validation F1 threshold sweep across candidate contamination values.}}{4}{figure.5}\protected@file@percent }
+\newlabel{fig:if_contamination}{{5}{4}{IF validation F1 threshold sweep across candidate contamination values}{figure.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}One-Class SVM}{4}{subsection.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces OC-SVM mean CV F1-Score across nu and gamma configurations.}}{4}{figure.6}\protected@file@percent }
+\newlabel{fig:ocsvm_heatmap}{{6}{4}{OC-SVM mean CV F1-Score across nu and gamma configurations}{figure.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Local Outlier Factor}{4}{subsection.4.5}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Left: LOF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across contamination values.}}{4}{figure.6}\protected@file@percent }
-\newlabel{fig:lof_heatmap}{{6}{4}{Left: LOF structural tuning mean CV F1 heatmap. Right: Validation F1 threshold sweep across contamination values}{figure.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces LOF structural tuning mean CV F1 heatmap (n\_neighbors).}}{4}{figure.7}\protected@file@percent }
+\newlabel{fig:lof_heatmap}{{7}{4}{LOF structural tuning mean CV F1 heatmap (n\_neighbors)}{figure.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces LOF validation F1 threshold sweep across contamination values.}}{4}{figure.8}\protected@file@percent }
+\newlabel{fig:lof_contamination}{{8}{4}{LOF validation F1 threshold sweep across contamination values}{figure.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-F}}Baseline vs. Tuned Performance}{4}{subsection.4.6}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Test-set F1-Score: default baseline vs. best hyperparameter configuration.}}{4}{figure.7}\protected@file@percent }
-\newlabel{fig:baseline_vs_best}{{7}{4}{Test-set F1-Score: default baseline vs. best hyperparameter configuration}{figure.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Deep Learning Models: Autoencoder Architectures}{4}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Primary Autoencoder (Normal-Trained)}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Test-set F1-Score: default baseline vs. best hyperparameter configuration.}}{4}{figure.9}\protected@file@percent }
+\newlabel{fig:baseline_vs_best}{{9}{4}{Test-set F1-Score: default baseline vs. best hyperparameter configuration}{figure.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Deep Learning Models: Autoencoder Architectures}{5}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Primary Autoencoder (Normal-Trained)}{5}{subsection.5.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Secondary Autoencoder (Anomaly-Trained)}{5}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Ensemble Autoencoder}{5}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Training Convergence and Analysis}{5}{subsection.5.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Training and validation loss (MSE) over epochs for the Autoencoders.}}{5}{figure.8}\protected@file@percent }
-\newlabel{fig:loss_comparison}{{8}{5}{Training and validation loss (MSE) over epochs for the Autoencoders}{figure.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Training and validation loss (MSE) over epochs for the Autoencoders.}}{5}{figure.10}\protected@file@percent }
+\newlabel{fig:loss_comparison}{{10}{5}{Training and validation loss (MSE) over epochs for the Autoencoders}{figure.10}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Presentation and Discussion of Results}{5}{section.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Performance Analysis and Comparison}{5}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Ensemble Autoencoder: The Security Champion}{5}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Second Autoencoder: The Operational Alternative}{5}{subsection.6.3}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Performance Metrics Comparison: Original vs. Balanced Test Configurations}}{6}{table.3}\protected@file@percent }
 \newlabel{tab:final_results}{{III}{6}{Performance Metrics Comparison: Original vs. Balanced Test Configurations}{table.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.947).}}{6}{figure.9}\protected@file@percent }
-\newlabel{fig:ensemble_diagnostic}{{9}{6}{Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.947)}{figure.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Ensemble Autoencoder: The Security Champion}{6}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Second Autoencoder: The Operational Alternative}{6}{subsection.6.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.947).}}{6}{figure.11}\protected@file@percent }
+\newlabel{fig:ensemble_diagnostic}{{11}{6}{Left: Ensemble Autoencoder Confusion Matrix. Right: Ensemble Autoencoder ROC Curve (AUC = 0.947)}{figure.11}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Analysis of Overfitting and Underfitting}{6}{subsection.6.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusions and Future Work}{6}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Critical Reflection}{6}{section.8}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{liu2008isolation}{1}
@@ -76,6 +79,7 @@
 \bibcite{scholkopf2001ocsvm}{4}
 \bibcite{sakurada2014autoencoder}{5}
 \bibcite{mirsky2018kitsune}{6}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Critical Reflection}{7}{section.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IX}AI Tools Acknowledgement}{7}{section.9}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{References}{7}{section*.1}\protected@file@percent }
 \gdef \@abspage@last{7}
